@@ -15,6 +15,8 @@ export {
 
 
 
+-- directory: "C:\Users\Seth\OneDrive - Colostate\Documents\GitHub\wStableIdeals"
+
 --------------------------------------------------------
 --------------------------------------------------------
 -- CONSTRUCTING W-STABLE IDEALS
@@ -43,11 +45,15 @@ wBorelClosure = (I,w) -> (
     )
 
 
+
+/// Example: The weight vector of all ones gives the classic Borel Closure
 K = ZZ/101;
 w = {1,1,1};
 n = #w;
 S = K[x_1..x_n,Degrees=>w];
 R = K[y_1..y_n];
 psi = psiMap(S,R,w)
-wBgens = {x_1*x_2*x_3^2};
-I = wBorelClosure(ideal(wBgens),w)
+Bgensw = {x_1*x_2*x_3^2};
+Ibar = wBorelClosure(ideal(Bgensw),w)
+
+///
