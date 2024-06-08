@@ -10,12 +10,10 @@ newPackage(
     )
 
 export {
-    "palpVertices","getVerticesFromWS", "getWSFromDim",
+    "psiMap",
+    "wBorelClosure",
     }
 
-
-
--- directory: "C:\Users\Seth\OneDrive - Colostate\Documents\GitHub\wStableIdeals"
 
 --------------------------------------------------------
 --------------------------------------------------------
@@ -24,36 +22,34 @@ export {
 --------------------------------------------------------
 
 
-psiMap = (S,R,degs) -> (
-    L = {};
-    for i from 1 to numgens S do (
-    L = append(L,y_i^(degs_(i-1)));
+psiMap = (S,degs) -> (
+    L := {};
+    n := numgens S;
+    K := coefficientRing S;
+    R := K[y_1..y_n];
+    for i from 1 to n do (
+    L := append(L,y_i^(degs_(i-1)));
     );
-    psi = map(R,S,L)
-    )
+    psi := map(R,S,L)
+    );
 
 wBorelClosure = (I,w) -> (
     S := ring I;
-    K := coefficientRing S;
-    n := numgens S;
-    R := K[y_1..y_n];
-    I := monomialIdeal I;
-    psi := psiMap(S,R,w);
-    psI := monomialIdeal psi(I);
+    startIdeal := monomialIdeal I;
+    psi := psiMap(S,w);
+    psI := monomialIdeal psi(startIdeal);
     psIbar := borel psI;
     Ibar := preimage_psi(psIbar)
-    )
+    );
 
 
 
 /// Example: The weight vector of all ones gives the classic Borel Closure
-K = ZZ/101;
-w = {1,1,1};
-n = #w;
-S = K[x_1..x_n,Degrees=>w];
-R = K[y_1..y_n];
-psi = psiMap(S,R,w)
-Bgensw = {x_1*x_2*x_3^2};
-Ibar = wBorelClosure(ideal(Bgensw),w)
+--K = ZZ/101;
+--w = {1,1,1};
+--n = #w;
+--S = K[x_1..x_n,Degrees=>w];
+--Bgensw = {x_1*x_2*x_3^2};
+--Ibar = wBorelClosure(ideal(Bgensw),w)
 
 ///
