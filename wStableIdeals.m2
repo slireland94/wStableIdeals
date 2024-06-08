@@ -11,7 +11,7 @@ newPackage(
 
 export {
     "psiMap",
-    "wBorelClosure",
+    "borelClosure",
     }
 
 --  path = append(path, ".Macaulay2/GitHub/wStableIdeals/")
@@ -23,31 +23,51 @@ export {
 --------------------------------------------------------
 --------------------------------------------------------
 
+
+--getWSFromDim = method(Options => {Degrees => null})
+
+--getWSFromDim ZZ := List => opts -> d -> (
+
+
 psiMap = method();
 
-psiMap = (S,degs) -> (
+psiMap := (S,R,degs) -> (
     L := {};
     n := numgens S;
-    K := coefficientRing S;
-    R := K[local y_1..local y_n];
     ys := gens R;
-    for i from 1 to n do (
-        L = append(L,y_i^(degs_(i-1)));
+    for i from 0 to n-1 do (
+        L = append(L,ys_i^(degs_i));
         );
     psi := map(R,S,L)
     );
 
 
-wBorelClosure = method();
+borelClosure = method(Options => {Degrees => null});
 
-wBorelClosure = (I,w) -> (
+borelClosure Ideal := Ideal => opts -> I -> (
     S := ring I;
+    n := numgens S;
+    w := if opts.Degrees === null then for i from 1 to n list 1 else opts.Degrees;
     startIdeal := monomialIdeal I;
-    psi := psiMap(S,w);
+
+    K := coefficientRing S;
+    R := K[vars (1..n)];
+    print(S,R,w);
+    psi := psiMap(S,R,w);
+
     psI := monomialIdeal psi(startIdeal);
     psIbar := borel psI;
     Ibar := preimage_psi(psIbar)
     );
 
 
+s = 7;
 
+--wBorelClosure = (I,w) -> (
+  --  S := ring I;
+    ---startIdeal := monomialIdeal I;
+    --psi := psiMap(S,w);
+    --psI := monomialIdeal psi(startIdeal);
+    --psIbar := borel psI;
+    --Ibar := preimage_psi(psIbar)
+    --);
