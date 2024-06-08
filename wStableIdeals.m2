@@ -14,6 +14,8 @@ export {
     "wBorelClosure",
     }
 
+--  path = append(path, ".Macaulay2/GitHub/wStableIdeals/")
+
 
 --------------------------------------------------------
 --------------------------------------------------------
@@ -21,17 +23,22 @@ export {
 --------------------------------------------------------
 --------------------------------------------------------
 
+psiMap = method();
 
 psiMap = (S,degs) -> (
     L := {};
     n := numgens S;
     K := coefficientRing S;
-    R := K[y_1..y_n];
+    R := K[local y_1..local y_n];
+    ys := gens R;
     for i from 1 to n do (
-    L := append(L,y_i^(degs_(i-1)));
-    );
+        L = append(L,y_i^(degs_(i-1)));
+        );
     psi := map(R,S,L)
     );
+
+
+wBorelClosure = method();
 
 wBorelClosure = (I,w) -> (
     S := ring I;
@@ -44,12 +51,3 @@ wBorelClosure = (I,w) -> (
 
 
 
-/// Example: The weight vector of all ones gives the classic Borel Closure
---K = ZZ/101;
---w = {1,1,1};
---n = #w;
---S = K[x_1..x_n,Degrees=>w];
---Bgensw = {x_1*x_2*x_3^2};
---Ibar = wBorelClosure(ideal(Bgensw),w)
-
-///
