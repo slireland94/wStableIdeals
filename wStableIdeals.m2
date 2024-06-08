@@ -6,12 +6,15 @@ newPackage(
     Authors => {{ Name => "Seth Ireland", Email => "seth.ireland@colostate.edu", HomePage => "sethireland.com"}},
     AuxiliaryFiles => false,
     DebuggingMode => true,
-    PackageImports => {"Polyhedra"}
+    PackageImports => {"Polyhedra","SRdeformations"}
     )
 
 export {
     "psiMap",
     "borelClosure",
+    "socleGens",
+    "hatShift",
+    "borelGens"
     }
 
 --  path = append(path, ".Macaulay2/GitHub/wStableIdeals/")
@@ -24,13 +27,7 @@ export {
 --------------------------------------------------------
 
 
---getWSFromDim = method(Options => {Degrees => null})
-
---getWSFromDim ZZ := List => opts -> d -> (
-
-
 psiMap = method();
-
 psiMap := (S,R,degs) -> (
     L := {};
     n := numgens S;
@@ -43,31 +40,58 @@ psiMap := (S,R,degs) -> (
 
 
 borelClosure = method(Options => {Degrees => null});
-
 borelClosure Ideal := Ideal => opts -> I -> (
     S := ring I;
     n := numgens S;
     w := if opts.Degrees === null then for i from 1 to n list 1 else opts.Degrees;
     startIdeal := monomialIdeal I;
-
     K := coefficientRing S;
     R := K[vars (1..n)];
     print(S,R,w);
     psi := psiMap(S,R,w);
-
     psI := monomialIdeal psi(startIdeal);
     psIbar := borel psI;
     Ibar := preimage_psi(psIbar)
     );
 
 
-s = 7;
+--------------------------------------------------------
+--------------------------------------------------------
+-- FINDING GOOD WEIGHT VECTORS
+--------------------------------------------------------
+--------------------------------------------------------
 
---wBorelClosure = (I,w) -> (
-  --  S := ring I;
-    ---startIdeal := monomialIdeal I;
-    --psi := psiMap(S,w);
-    --psI := monomialIdeal psi(startIdeal);
-    --psIbar := borel psI;
-    --Ibar := preimage_psi(psIbar)
-    --);
+socleGens = method();
+socleGens Ideal := List => I -> (
+    m := ideal gens ring I;
+    soc := (entries gens quotient(I,m))_0
+    );
+
+hatShift = method();
+hatShift = mon -> (
+    expVec := (exponents mon)_0;
+    n := #expVec;
+    hatExpVec := {};
+    count := 0;
+    for i from 0 to n-1 do (
+        count = count + expVec_i;
+        hatExpVec = append(hatExpVec,count);
+        );
+    monHat := vectorToMonomial(vector hatExpVec,ring mon)
+    );
+
+borelGens = method();
+borelGens Ideal := List => I -> (
+    G := (entries gens I)_0;
+    Ghat := {};
+    for g in G do (
+        Ghat = append(Ghat,hatShift(g));
+        );
+    Ihat := ideal(Ghat)
+    bgensHat := set (entries mingens Ihat)_0;
+    bgens := {};
+    for u in G do (
+        uHat = hatShift(u);
+        if bgensHat#?uHat then bgens = append(bgens,u);
+        );
+    bgens);
