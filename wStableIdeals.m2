@@ -140,9 +140,23 @@ stableRegion = (I) -> (
     bgens := borelGens(I);
     sgens := socleGens(I);
     PC := {};
+    n := numgens ring I;
+    g := gens ring I;
+    K := coefficientRing ring I;
+    tempRing := K[g,MonomialOrder=>Lex];
+    fundRegion := nonincreasingRegion(n);
     for b in bgens do (
         for s in sgens do(
-            PC = append(PC,polyhedron(uvCone(b,s)));
+            if (s%I)!=0 and b>s then (
+                print(b,s);
+                c := intersection(uvCone(b,s),fundRegion);
+                PC = append(PC,c);
+                );
             );
         );
     PC);
+
+
+
+S = QQ[x,y,z]
+I = borelClosure(ideal(z^5),Degrees=>{4,3,1})
