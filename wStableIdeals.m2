@@ -6,7 +6,7 @@ newPackage(
     Authors => {{ Name => "Seth Ireland", Email => "seth.ireland@colostate.edu", HomePage => "sethireland.com"}},
     AuxiliaryFiles => false,
     DebuggingMode => true,
-    PackageImports => {"Polyhedra","SRdeformations"}
+    PackageExports => {"Polyhedra","SRdeformations"}
     )
 
 export {
@@ -14,7 +14,10 @@ export {
     "borelClosure",
     "socleGens",
     "hatShift",
-    "borelGens"
+    "borelGens",
+    "uvCone",
+    "nonincreasingRegion",
+    "stableRegion"
     }
 
 --  path = append(path, ".Macaulay2/GitHub/wStableIdeals/")
@@ -87,11 +90,59 @@ borelGens Ideal := List => I -> (
     for g in G do (
         Ghat = append(Ghat,hatShift(g));
         );
-    Ihat := ideal(Ghat)
+    Ihat := ideal(Ghat);
     bgensHat := set (entries mingens Ihat)_0;
     bgens := {};
     for u in G do (
-        uHat = hatShift(u);
+        uHat := hatShift(u);
         if bgensHat#?uHat then bgens = append(bgens,u);
         );
     bgens);
+
+
+--INPUT: u,v: monomials
+--OUTPUT: cone of weight vectors for which u "w-generates" v
+uvCone = method();
+uvCone = (u,v) -> (
+    a := (exponents u)_0;
+    b := (exponents v)_0;
+    n := #a;
+    finalIneqs := {};
+    for j from 1 to n do (
+        jIneqs := {};
+        for i from 1 to j do (
+            jIneqs = append(jIneqs,b_(i-1)-a_(i-1));
+            );
+        for i from j+1 to n do (
+            jIneqs = append(jIneqs,0);
+            );
+        finalIneqs = append(finalIneqs,jIneqs);
+        );
+    coneFromHData(matrix finalIneqs));
+
+-- possible weights region (nonincreasing)
+nonincreasingRegion = n -> (
+    Rays := {};
+    for i from 0 to n-1 do (
+        iRay := {};
+        for j from 0 to i do (
+            iRay = append(iRay,1);
+            );
+        for j from i+1 to n-1 do (
+            iRay = append(iRay,0);
+            );
+        Rays = append(Rays,iRay);
+        );
+    coneFromVData(transpose(matrix Rays)));
+
+-- stable region
+stableRegion = (I) -> (
+    bgens := borelGens(I);
+    sgens := socleGens(I);
+    PC := {};
+    for b in bgens do (
+        for s in sgens do(
+            PC = append(PC,polyhedron(uvCone(b,s)));
+            );
+        );
+    PC);
