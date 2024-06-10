@@ -18,7 +18,8 @@ export {
     "uvCone",
     "nonincreasingRegion",
     "badCones",
-    "stableBoundary"
+    "stableBoundary",
+    "getFundRegionBdry"
     }
 
 --  path = append(path, ".Macaulay2/GitHub/wStableIdeals/")
@@ -156,6 +157,29 @@ badCones = (I) -> (
         );
     PC);
 
+getFundRegionBdry = (n) -> (
+    L := {};
+    cdimOneCones := {};
+    for j from 0 to n-1 do (
+        tempList := {};
+        for i from 0 to j do (
+            tempList = append(tempList,1);
+            );
+        for i from j+1 to n-1 do(
+            tempList = append(tempList,0);
+            );
+        L = append(L,tempList);
+        );
+    print(L);
+    ones := transpose matrix {L_(-1)};
+
+    for j from 0 to n-2 do (
+        v := transpose matrix {L_j};
+        cdimOneCones = append(cdimOneCones,coneFromVData(ones|v));
+        );
+    cdimOneCones);
+
+
 
 stableBoundary = (I) -> (
     intBdryPts := {};
@@ -163,7 +187,6 @@ stableBoundary = (I) -> (
     allbC := badCones(I);
     bC := for con in allbC list (if dim con == n then con else continue);
     k := #bC;
-    print(bC);
     goodRays := {};
     for i from 0 to k-1 do (
         for j from i to k-1 do (
