@@ -17,7 +17,8 @@ export {
     "borelGens",
     "uvCone",
     "nonincreasingRegion",
-    "stableRegion"
+    "badCones",
+    "stableBoundary"
     }
 
 --  path = append(path, ".Macaulay2/GitHub/wStableIdeals/")
@@ -136,7 +137,7 @@ nonincreasingRegion = n -> (
     coneFromVData(transpose(matrix Rays)));
 
 -- stable region
-stableRegion = (I) -> (
+badCones = (I) -> (
     bgens := borelGens(I);
     sgens := socleGens(I);
     PC := {};
@@ -148,7 +149,6 @@ stableRegion = (I) -> (
     for b in bgens do (
         for s in sgens do(
             if (s%I)!=0 and b>s then (
-                print(b,s);
                 c := intersection(uvCone(b,s),fundRegion);
                 PC = append(PC,c);
                 );
@@ -156,6 +156,46 @@ stableRegion = (I) -> (
         );
     PC);
 
+
+stableBoundary = (I) -> (
+    intBdryPts := {};
+    n := numgens ring I;
+    allbC := badCones(I);
+    bC := for con in allbC list (if dim con == n then con else continue);
+    k := #bC;
+    print(bC);
+    goodRays := {};
+    for i from 0 to k-1 do (
+        for j from i to k-1 do (
+            ic := intersection(bC_i,bC_j);
+            icRays := matrix rays ic;
+            tempGoodRays := {};
+            for l from 0 to (numgens source icRays - 1) do (
+                for m from 0 to k-1 do (
+                    p := matrix icRays_l;
+                    if m==0 then (
+                        tempGoodRays = append(tempGoodRays,p);
+                        );
+                    c := bC_m;
+                    if inInterior(p,c) then (
+                        tempGoodRays = delete(p,tempGoodRays);
+                        );
+                    );
+            goodRays = join(goodRays,tempGoodRays);
+                );
+            );
+        );
+    bdryPts := toList set goodRays;
+    for pt in bdryPts do (
+        en := entries pt;
+        -- check if pt is in the interior of the fundamental region
+        if #(set en) == #en and not isMember({0},set en) then (
+                intBdryPts = append(intBdryPts,pt);
+            );
+        );
+    intBdryPts);
+
+--
 
 
 S = QQ[x,y,z]
