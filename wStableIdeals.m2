@@ -182,12 +182,24 @@ getFundRegionBdry = (n) -> (
 
 
 stableBoundary = (I) -> (
-    intBdryPts := {};
+    goodRays := {};
     n := numgens ring I;
+    BdryPts := {transpose matrix {for i from 1 to n list 1}};
     allbC := badCones(I);
+    F := fan allbC;
+    f := rays posHull rays F;
+    edgeCones := getFundRegionBdry(n);
+    for i from 0 to (numgens source f - 1) do (
+        r := matrix f_i;
+        for j from 0 to #edgeCones-1 do (
+            if inInterior(r,edgeCones_j) then (
+                BdryPts = append(BdryPts,r)
+                );
+            );
+        );
     bC := for con in allbC list (if dim con == n then con else continue);
     k := #bC;
-    goodRays := {};
+    
     for i from 0 to k-1 do (
         for j from i to k-1 do (
             ic := intersection(bC_i,bC_j);
@@ -213,13 +225,8 @@ stableBoundary = (I) -> (
         en := entries pt;
         -- check if pt is in the interior of the fundamental region
         if #(set en) == #en and not isMember({0},set en) then (
-                intBdryPts = append(intBdryPts,pt);
+                BdryPts = append(BdryPts,pt);
             );
         );
-    intBdryPts);
+    BdryPts);
 
---
-
-
-S = QQ[x,y,z]
-I = borelClosure(ideal(z^5),Degrees=>{4,3,1})
