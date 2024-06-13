@@ -15,11 +15,11 @@ export {
     "socleGens",
     "hatShift",
     "borelGens",
-    "uvCone",
-    "nonincreasingRegion",
-    "badCones",
-    "stableBoundary",
-    "getFundRegionBdry"
+    "halfPlanes",
+    "fundRegion",
+    "goodCones",
+    "stableRegion"
+    
     }
 
 --  path = append(path, ".Macaulay2/GitHub/wStableIdeals/")
@@ -104,8 +104,8 @@ borelGens Ideal := List => I -> (
 
 --INPUT: u,v: monomials
 --OUTPUT: cone of weight vectors for which u "w-generates" v
-uvCone = method();
-uvCone = (u,v) -> (
+halfPlanes = method();
+halfPlanes = (u,v) -> (
     a := (exponents u)_0;
     b := (exponents v)_0;
     n := #a;
@@ -120,10 +120,10 @@ uvCone = (u,v) -> (
             );
         finalIneqs = append(finalIneqs,jIneqs);
         );
-    coneFromHData(matrix finalIneqs));
+    finalIneqs);
 
 -- possible weights region (nonincreasing)
-nonincreasingRegion = n -> (
+fundRegion = n -> (
     Rays := {};
     for i from 0 to n-1 do (
         iRay := {};
@@ -137,96 +137,39 @@ nonincreasingRegion = n -> (
         );
     coneFromVData(transpose(matrix Rays)));
 
+-- collection of cones where u does not generate v
+goodCones = (u,v) -> (
+    gC := {};
+    n := numgens ring u;
+    fund := fundRegion(n);
+    badC := coneFromHData (matrix halfPlanes(u,v));
+    hs := halfspaces badC;
+    for i from 0 to (numgens target hs - 1) do (
+        t := intersection(coneFromHData (hs^{i}*-1),fund);
+        gC = append(gC,t);
+        );
+    gC);
+
+
 -- stable region
-badCones = (I) -> (
+stableRegion = (I) -> (
     bgens := borelGens(I);
     sgens := socleGens(I);
-    PC := {};
+    PCs := {};
     n := numgens ring I;
     g := gens ring I;
     K := coefficientRing ring I;
     tempRing := K[g,MonomialOrder=>Lex];
-    fundRegion := nonincreasingRegion(n);
+    fund := fundRegion(n);
     for b in bgens do (
-        for s in sgens do(
-            if (s%I)!=0 and b>s then (
-                c := intersection(uvCone(b,s),fundRegion);
-                PC = append(PC,c);
+        for s in sgens do (
+            if s%I != 0 and b>s then (
+                PCs = append(PCs,goodCones(b,s));
                 );
             );
         );
-    PC);
+    Fs := for p in PCs list posHull rays fan p;
+    stblR := intersection(Fs)
+    );
 
-getFundRegionBdry = (n) -> (
-    L := {};
-    cdimOneCones := {};
-    for j from 0 to n-1 do (
-        tempList := {};
-        for i from 0 to j do (
-            tempList = append(tempList,1);
-            );
-        for i from j+1 to n-1 do(
-            tempList = append(tempList,0);
-            );
-        L = append(L,tempList);
-        );
-    print(L);
-    ones := transpose matrix {L_(-1)};
-
-    for j from 0 to n-2 do (
-        v := transpose matrix {L_j};
-        cdimOneCones = append(cdimOneCones,coneFromVData(ones|v));
-        );
-    cdimOneCones);
-
-
-
-stableBoundary = (I) -> (
-    goodRays := {};
-    n := numgens ring I;
-    BdryPts := {transpose matrix {for i from 1 to n list 1}};
-    allbC := badCones(I);
-    F := fan allbC;
-    f := rays posHull rays F;
-    edgeCones := getFundRegionBdry(n);
-    for i from 0 to (numgens source f - 1) do (
-        r := matrix f_i;
-        for j from 0 to #edgeCones-1 do (
-            if inInterior(r,edgeCones_j) then (
-                BdryPts = append(BdryPts,r)
-                );
-            );
-        );
-    bC := for con in allbC list (if dim con == n then con else continue);
-    k := #bC;
-    
-    for i from 0 to k-1 do (
-        for j from i to k-1 do (
-            ic := intersection(bC_i,bC_j);
-            icRays := matrix rays ic;
-            tempGoodRays := {};
-            for l from 0 to (numgens source icRays - 1) do (
-                for m from 0 to k-1 do (
-                    p := matrix icRays_l;
-                    if m==0 then (
-                        tempGoodRays = append(tempGoodRays,p);
-                        );
-                    c := bC_m;
-                    if inInterior(p,c) then (
-                        tempGoodRays = delete(p,tempGoodRays);
-                        );
-                    );
-            goodRays = join(goodRays,tempGoodRays);
-                );
-            );
-        );
-    bdryPts := toList set goodRays;
-    for pt in bdryPts do (
-        en := entries pt;
-        -- check if pt is in the interior of the fundamental region
-        if #(set en) == #en and not isMember({0},set en) then (
-                BdryPts = append(BdryPts,pt);
-            );
-        );
-    BdryPts);
 

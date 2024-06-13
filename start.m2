@@ -2,7 +2,13 @@
 
 
 needsPackage("wStableIdeals",Reload=>true)
+needsPackage("RandomIdeals")
 
 K = ZZ/101;
 S = K[x,y,z];
-I = borelClosure(ideal(z^5),Degrees=>{4,3,1});
+d = {2,3,3}
+J = randomMonomialIdeal(d,S)
+J = ideal(z^5)
+I = borelClosure(J,Degrees=>{4,3,1});
+P = stableRegion(I)
+print rays P
