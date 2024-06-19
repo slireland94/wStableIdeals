@@ -6,11 +6,8 @@
 needsPackage("wStableIdeals",Reload=>true)
 needsPackage("RandomIdeals")
 
-
-
-
-a = {1,2,1}
-w = {3,2,2}
+a = {0,1,3}
+w = {4,3,1}
 
 
 n = #a;
@@ -21,4 +18,7 @@ u = vectorToMonomial(vector a, S)
 
 J = ideal(u)
 --I = borel monomialIdeal(u);
-I = borelClosure(J,Degrees=>{3,2,2});
+I = borelClosure(J,Degrees=>w);
+
+
+Gu = shadowGraph(u)

@@ -6,7 +6,7 @@ newPackage(
     Authors => {{ Name => "Seth Ireland", Email => "seth.ireland@colostate.edu", HomePage => "sethireland.com"}},
     AuxiliaryFiles => false,
     DebuggingMode => true,
-    PackageExports => {"Polyhedra","SRdeformations"}
+    PackageExports => {"Polyhedra","SRdeformations","Graphs"}
     )
 
 export {
@@ -18,7 +18,10 @@ export {
     "halfPlanes",
     "fundRegion",
     "goodCones",
-    "stableRegion"
+    "stableRegion",
+    "shadowGraph",
+    "maxIndex",
+    "factoredIndices"
     
     }
 
@@ -173,3 +176,65 @@ stableRegion = (I) -> (
     );
 
 
+--------------------------------------------------------
+--------------------------------------------------------
+-- N-ARY TREES
+--------------------------------------------------------
+--------------------------------------------------------
+
+maxIndex = method();
+maxIndex RingElement := ZZ => (m) -> (
+    expVec := (exponents m)_0;
+    maxNonzero := position(expVec, i -> i!=0 ,Reverse=>true);
+    maxNonzero);
+
+
+factoredIndices = method();
+factoredIndices RingElement := List => (m) -> (
+    expVec := (exponents m)_0;
+    factorList := {};
+    n := #expVec;
+    for i from 0 to n-1 do (
+        for j from 0 to expVec_i-1 do (
+            factorList = append(factorList,i);
+            );
+        );
+    factorList);
+
+shadowGraph = method();
+shadowGraph RingElement := Graph => (m) -> (
+    S := ring m;
+    gs := gens S;
+    d := (degree m)_0;
+    G := graph({{1,gs_0}});
+    fm := factoredIndices(m);
+    -- add branches to base vertex (1) as necessary
+    for j from 1 to fm_0 do (
+        G = addVertex(G,gs_j);
+        G = addEdge(G,set {1,gs_j})
+        );
+    leafDegs := for v in leaves G list ((degree v)_0);
+    L := leaves G;
+    print(L);
+    stop := false;
+    while stop==false do (
+        for leaf in L do (
+            leafDeg := (degree leaf)_0;
+            if leafDeg < d then (
+                fLeaf := factoredIndices(leaf);
+                leafLen := #fLeaf;
+                print(leaf,fLeaf,leafLen);
+                for j from maxIndex(leaf) to fm_(leafLen) do (
+                    G = addVertex(G,leaf*gs_j);
+                    G = addEdge(G,set {leaf,leaf*gs_j});
+                    );
+                );
+            );
+        L = leaves G;
+        leafDegs = for v in leaves G list ((degree v)_0);
+        if min(leafDegs) >= d then (stop=true);
+        );
+    G);
+
+-- only want to branch off leaves with small degree
+-- need to get trunc_degv+1(m) as upper bound on line 223
