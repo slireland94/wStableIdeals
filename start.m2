@@ -6,13 +6,13 @@
 needsPackage("wStableIdeals",Reload=>true)
 needsPackage("RandomIdeals")
 
-a = {0,1,3}
+a = {0,0,5}
 w = {4,3,1}
 
 
 n = #a;
 K = ZZ/101;
-S = K[x_1..x_n,Degrees=>w];
+S = K[x,y,z,Degrees=>w];
 
 u = vectorToMonomial(vector a, S)
 
