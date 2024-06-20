@@ -6,14 +6,22 @@
 needsPackage("wStableIdeals",Reload=>true)
 needsPackage("RandomIdeals")
 
-a = {7,0,0,2,1}
-w = {5,4,3,2,1}
-
-
-n = #a;
+n = 5;
+maxW = 6;
+maxD = 9;
 K = ZZ/101;
-S = K[x_1..x_5];
+S = K[x_1..x_n];
+w = rsort(for i from 0 to n-1 list (random(1,maxW)));
 
-u = vectorToMonomial(vector a, S)
-I = borelClosure(ideal(u));
-G = shadowGraph2(u)
+
+
+
+
+u = randomMonomial(random(1,maxD),S)
+I = borelClosure(ideal(u),Degrees=>w);
+print("borelClosure done")
+G = shadowGraph2(u,Degrees=>w)
+print("shadowGraph2 done")
+L = delete(1,leaves G);
+J = sub(ideal(L),S)
+print(u,w,I==J)

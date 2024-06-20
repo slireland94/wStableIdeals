@@ -192,13 +192,15 @@ maxIndex RingElement := ZZ => (m) -> (
 
 
 factoredIndices = method();
-factoredIndices RingElement := List => (m) -> (
+factoredIndices (RingElement,List) := List => (m,w) -> (
     expVec := (exponents m)_0;
     factorList := {};
     n := #expVec;
     for i from 0 to n-1 do (
         for j from 0 to expVec_i-1 do (
-            factorList = append(factorList,i);
+            for k from 0 to w_i-1 do (
+                factorList = append(factorList,i);
+                );
             );
         );
     factorList);
@@ -264,18 +266,20 @@ shadowGraph2 RingElement := Graph => opts -> m -> (
     Sw := K[g1,Degrees=>w];
     gs := gens Sw;
     u := sub(m,Sw);
-    ufactored := factoredIndices(u);
+    ufactored := factoredIndices(u,w);
     d := (degree u)_0;
 
-    G := graph({{1,gs_0}});
+    G := graph(for i from 0 to min(ufactored) list ({1,gs_i}));
+    --G := graph({{1,gs_0}});
     L := delete(1, leaves G);
     buds := for l in L list (if (degree l)_0 < d then l else continue);
     while #buds > 0 do (
         for bud in buds do (
-            budFactored := factoredIndices(bud);
+            budFactored := factoredIndices(bud,w);
             budDeg := #budFactored;
             budMax := max(budFactored);
-            for j from budMax to ufactored_budDeg do (
+            upperBound := if budDeg < #ufactored then (ufactored_budDeg) else (max(ufactored));
+            for j from budMax to upperBound do (
                 G = addVertex(G,bud*gs_j);
                 G = addEdge(G,set {bud,bud*gs_j});
                 );
