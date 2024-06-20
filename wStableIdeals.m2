@@ -22,7 +22,8 @@ export {
     "shadowGraph",
     "maxIndex",
     "factoredIndices",
-    "stopIdeal"
+    "stopIdeal",
+    "shadowGraph2"
     
     }
 
@@ -233,7 +234,8 @@ shadowGraph RingElement := Graph => opts -> m -> (
             if leafDeg < d and leaf%stpI != 0 then (
                 fLeaf := factoredIndices(leaf);
                 leafLen := #fLeaf;
-                for j from maxIndex(leaf) to fm_(leafLen) do (
+                if #fm < leafLen-1 then (upperBound := n-1) else (upperBound := fm_leafLen);
+                for j from maxIndex(leaf) to upperBound do (
                     G = addVertex(G,leaf*gs_j);
                     G = addEdge(G,set {leaf,leaf*gs_j});
                     );
@@ -243,4 +245,43 @@ shadowGraph RingElement := Graph => opts -> m -> (
         leafDegs = for v in L list (if v%stpI!=0 then (degree v)_0 else continue);
         if min(leafDegs) >= d then (stop=true);
         );
+    G);
+
+
+
+-- Input: m from a PolynomialRing
+-- Optional: Degrees=>w (weight vector); stopIdeal=>I (will stop branching when leaves are in I)
+-- Output: G_w(m)
+shadowGraph2 = method(Options => {Degrees=>null,stopIdeal=>null});
+shadowGraph2 RingElement := Graph => opts -> m -> (
+
+    S := ring m;
+    K := coefficientRing S;
+    n := numgens S;
+    g1 := gens S;
+
+    w := if opts.Degrees === null then for i from 1 to n list 1 else opts.Degrees;
+    Sw := K[g1,Degrees=>w];
+    gs := gens Sw;
+    u := sub(m,Sw);
+    ufactored := factoredIndices(u);
+    d := (degree u)_0;
+
+    G := graph({{1,gs_0}});
+    L := delete(1, leaves G);
+    buds := for l in L list (if (degree l)_0 < d then l else continue);
+    while #buds > 0 do (
+        for bud in buds do (
+            budFactored := factoredIndices(bud);
+            budDeg := #budFactored;
+            budMax := max(budFactored);
+            for j from budMax to ufactored_budDeg do (
+                G = addVertex(G,bud*gs_j);
+                G = addEdge(G,set {bud,bud*gs_j});
+                );
+            );            
+        L = delete(1, leaves G);
+        buds = for l in L list (if (degree l)_0 < d then l else continue);
+        );
+
     G);
