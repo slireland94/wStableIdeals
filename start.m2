@@ -25,3 +25,8 @@ print("shadowGraph2 done")
 L = delete(1,leaves G);
 J = sub(ideal(L),S)
 print(u,w,I==J)
+
+
+gstop = shadowGraph2(u,Degrees=>w,stopMons=>{x_1*x_2})
+lstop = delete(1,leaves gstop)
+jstop = sub(ideal(lstop),S)

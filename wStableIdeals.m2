@@ -23,7 +23,8 @@ export {
     "maxIndex",
     "factoredIndices",
     "stopIdeal",
-    "shadowGraph2"
+    "shadowGraph2",
+    "stopMons"
     
     }
 
@@ -254,7 +255,7 @@ shadowGraph RingElement := Graph => opts -> m -> (
 -- Input: m from a PolynomialRing
 -- Optional: Degrees=>w (weight vector); stopIdeal=>I (will stop branching when leaves are in I)
 -- Output: G_w(m)
-shadowGraph2 = method(Options => {Degrees=>null,stopIdeal=>null});
+shadowGraph2 = method(Options => {Degrees=>null,stopMons=>{}});
 shadowGraph2 RingElement := Graph => opts -> m -> (
 
     S := ring m;
@@ -272,8 +273,10 @@ shadowGraph2 RingElement := Graph => opts -> m -> (
     G := graph(for i from 0 to min(ufactored) list ({1,gs_i}));
     --G := graph({{1,gs_0}});
     L := delete(1, leaves G);
-    buds := for l in L list (if (degree l)_0 < d then l else continue);
+    stops := for stopMon in opts.stopMons list sub(stopMon,Sw);
+    buds := for l in L list (if ( (degree l)_0 < d ) and ( not isSubset({l},stops) ) then l else continue);
     while #buds > 0 do (
+        print(buds);
         for bud in buds do (
             budFactored := factoredIndices(bud,w);
             budDeg := #budFactored;
@@ -285,7 +288,7 @@ shadowGraph2 RingElement := Graph => opts -> m -> (
                 );
             );            
         L = delete(1, leaves G);
-        buds = for l in L list (if (degree l)_0 < d then l else continue);
+        buds = for l in L list (if ( (degree l)_0 < d ) and ( not isSubset({l},stops) ) then l else continue);
         );
 
     G);
