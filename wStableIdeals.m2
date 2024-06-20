@@ -24,7 +24,8 @@ export {
     "factoredIndices",
     "stopIdeal",
     "shadowGraph2",
-    "stopMons"
+    "stopMons",
+    "getLeafEqns"
     
     }
 
@@ -58,7 +59,6 @@ borelClosure Ideal := Ideal => opts -> I -> (
     startIdeal := monomialIdeal I;
     K := coefficientRing S;
     R := K[vars (1..n)];
-    print(S,R,w);
     psi := psiMap(S,R,w);
     psI := monomialIdeal psi(startIdeal);
     psIbar := borel psI;
@@ -276,7 +276,6 @@ shadowGraph2 RingElement := Graph => opts -> m -> (
     stops := for stopMon in opts.stopMons list sub(stopMon,Sw);
     buds := for l in L list (if ( (degree l)_0 < d ) and ( not isSubset({l},stops) ) then l else continue);
     while #buds > 0 do (
-        print(buds);
         for bud in buds do (
             budFactored := factoredIndices(bud,w);
             budDeg := #budFactored;
@@ -292,3 +291,18 @@ shadowGraph2 RingElement := Graph => opts -> m -> (
         );
 
     G);
+
+
+
+getLeafEqns = method();
+getLeafEqns (Graph,RingElement) := Matrix => (G,m) -> (
+    L := delete(1,leaves G);
+    Le := for l in L list ((exponents l)_0);
+    me := (exponents m)_0;
+    n := #me;
+    eqns := {};
+    for le in Le do (
+        eqn := for i from 0 to n-1 list( me_i - le_i );
+        eqns = append(eqns,eqn);
+        );
+    matrix eqns);
