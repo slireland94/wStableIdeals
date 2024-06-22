@@ -12,20 +12,16 @@ maxD = 7;
 K = ZZ/101;
 S = K[x_1..x_n];
 w = rsort(for i from 0 to n-1 list (random(1,maxW)));
-m = randomMonomial(random(1,maxD),S);
+m1 = randomMonomial(random(1,maxD),S);
+m2 = randomMonomial(random(1,maxD),S);
+m3 = randomMonomial(random(1,maxD),S);
+I = borelClosure(ideal(m1,m2,m3));
 
-print(m,w)
+G = getBgensTrees(I)
 
-elapsedTime(G = shadowGraph2(m,Degrees=>w);
-L = delete(1,leaves G);
-J = sub(ideal(L),S));
-elapsedTime(I = borelClosure(ideal(m),Degrees=>w));
+L = delete(1, flatten (for g in G list leaves g))
+J = sub(ideal(L),S)
 
 print(I==J)
 
-vs = getLeafEqns(G,m)
 
-
---gstop = shadowGraph2(u,Degrees=>w,stopMons=>{x_1*x_2})
---lstop = delete(1,leaves gstop)
---jstop = sub(ideal(lstop),S)

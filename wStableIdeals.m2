@@ -25,7 +25,7 @@ export {
     "stopIdeal",
     "shadowGraph2",
     "stopMons",
-    "getLeafEqns"
+    "getBgensTrees"
     
     }
 
@@ -206,51 +206,6 @@ factoredIndices (RingElement,List) := List => (m,w) -> (
         );
     factorList);
 
--- Input: m from a PolynomialRing
--- Optional: Degrees=>w (weight vector); stopIdeal=>I (will stop branching when leaves are in I)
--- Output: G_w(m)
-shadowGraph = method(Options => {Degrees=>null,stopIdeal=>null});
-shadowGraph RingElement := Graph => opts -> m -> (
-    S := ring m;
-    K := coefficientRing S;
-    gs := gens S;
-    n := numgens S;
-    w := if opts.Degrees === null then for i from 1 to n list 1 else opts.Degrees;
-    S2 := K[gs,Degrees=>w];
-    gs = gens S2;
-    stpI := if opts.stopIdeal === null then sub(ideal(0),S2) else sub(opts.stopIdeal,S2);
-    m = sub(m,S2);
-    d := (degree m)_0;
-    G := graph({{1,gs_0}});
-    fm := factoredIndices(m);
-    -- add branches to base vertex (1) as necessary
-    for j from 1 to fm_0 do (
-        G = addVertex(G,gs_j);
-        G = addEdge(G,set {1,gs_j})
-        );
-    L := delete(1,leaves G);
-    leafDegs := for v in L list ((degree v)_0);
-    stop := false;
-    while stop==false do (
-        for leaf in L do (
-            leafDeg := (degree leaf)_0;
-            if leafDeg < d and leaf%stpI != 0 then (
-                fLeaf := factoredIndices(leaf);
-                leafLen := #fLeaf;
-                if #fm < leafLen-1 then (upperBound := n-1) else (upperBound := fm_leafLen);
-                for j from maxIndex(leaf) to upperBound do (
-                    G = addVertex(G,leaf*gs_j);
-                    G = addEdge(G,set {leaf,leaf*gs_j});
-                    );
-                );
-            );
-        L = delete(1,leaves G);
-        leafDegs = for v in L list (if v%stpI!=0 then (degree v)_0 else continue);
-        if min(leafDegs) >= d then (stop=true);
-        );
-    G);
-
-
 
 -- Input: m from a PolynomialRing
 -- Optional: Degrees=>w (weight vector); stopIdeal=>I (will stop branching when leaves are in I)
@@ -294,15 +249,61 @@ shadowGraph2 RingElement := Graph => opts -> m -> (
 
 
 
-getLeafEqns = method();
-getLeafEqns (Graph,RingElement) := Matrix => (G,m) -> (
-    L := delete(1,leaves G);
-    Le := for l in L list ((exponents l)_0);
-    me := (exponents m)_0;
-    n := #me;
-    eqns := {};
-    for le in Le do (
-        eqn := for i from 0 to n-1 list( me_i - le_i );
-        eqns = append(eqns,eqn);
+
+-- Edit: shadowGraph2 labelled vertices with mons from wrong ring...subbed things back into S
+-- Input: m from a PolynomialRing
+-- Optional: Degrees=>w (weight vector); stopIdeal=>I (will stop branching when leaves are in I)
+-- Output: G_w(m)
+shadowGraph3 = method(Options => {Degrees=>null,stopMons=>{}});
+shadowGraph3 RingElement := Graph => opts -> m -> (
+
+    S := ring m;
+    K := coefficientRing S;
+    n := numgens S;
+    g1 := gens S;
+
+    w := if opts.Degrees === null then for i from 1 to n list 1 else opts.Degrees;
+    Sw := K[g1,Degrees=>w];
+    gs := gens Sw;
+    u := sub(m,Sw);
+    ufactored := factoredIndices(u,w);
+    d := (degree u)_0;
+
+    G := graph(for i from 0 to min(ufactored) list ({1,g1_i}));
+    --G := graph({{1,gs_0}});
+    L := delete(1, leaves G);
+    stops := for stopMon in opts.stopMons list sub(stopMon,Sw);
+    buds := for l in L list (if ( (degree l)_0 < d ) and ( not isSubset({l},stops) ) then l else continue);
+    while #buds > 0 do (
+        for bud in buds do (
+            budFactored := factoredIndices(bud,w);
+            budDeg := #budFactored;
+            budMax := max(budFactored);
+            upperBound := if budDeg < #ufactored then (ufactored_budDeg) else (max(ufactored));
+            for j from budMax to upperBound do (
+                G = addVertex(G,sub(bud*g1_j,S));
+                G = addEdge(G,set {sub(bud,S),sub(bud*g1_j,S)});
+                );
+            );            
+        L = delete(1, leaves G);
+        buds = for l in L list (if ( (degree l)_0 < d ) and ( not isSubset({l},stops) ) then l else continue);
         );
-    matrix eqns);
+
+    G);
+
+
+
+
+
+
+
+
+
+-- method to get all the subleaves from a graph
+getBgensTrees = method();
+getBgensTrees Ideal := List => (I) -> (
+    GI := (entries gens I)_0;
+    Bgens := borelGens(I);
+    print(Bgens,GI);
+    bTrees := for mi in Bgens list ( shadowGraph3(mi,stopMons=>GI) );
+    bTrees);
