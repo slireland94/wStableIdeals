@@ -25,7 +25,10 @@ export {
     "stopIdeal",
     "shadowGraph2",
     "stopMons",
-    "getBgensTrees"
+    "getBgensTrees",
+    "getLargestLexMonSmallerThanMon",
+    "getConeWhereListGeneratesList",
+    "getHalfSpace"
     
     }
 
@@ -293,17 +296,49 @@ shadowGraph3 RingElement := Graph => opts -> m -> (
 
 
 
-
-
-
-
-
-
 -- method to get all the subleaves from a graph
 getBgensTrees = method();
 getBgensTrees Ideal := List => (I) -> (
     GI := (entries gens I)_0;
     Bgens := borelGens(I);
     print(Bgens,GI);
-    bTrees := for mi in Bgens list ( shadowGraph3(mi,stopMons=>GI) );
+    bTrees := for mi in Bgens list ( {mi,shadowGraph3(mi,stopMons=>GI)} );
     bTrees);
+
+
+getLargestLexMonSmallerThanMon = method();
+getLargestLexMonSmallerThanMon (List,RingElement) := RingElement => (B,v) -> (
+    S := ring v;
+    K := coefficientRing S;
+    gs := gens S;
+    S2 := K[gs,MonomialOrder=>Lex];
+    B2 := for b in B list ( sub(b,S2) );
+    sortedB := sort B2;
+    s := #sortedB;
+    v2 := sub(v,S2);
+    r := max( for i from 0 to s-1 list ( if sortedB_i <= v2 then i else continue ));
+    largestLexBgen := sub(sortedB_r,S);
+    largestLexBgen);
+
+
+-- gets space where u generates v
+getHalfSpace = method();
+getHalfSpace (RingElement,RingElement) := Cone => (u,v) -> (
+    a := (exponents u)_0;
+    b := (exponents v)_0;
+    ineq := for i from 0 to #a-1 list ( b_i - a_i );
+    ineq);
+
+-- generates the cone where a list of monomials B generates a list of monomials C
+getConeWhereListGeneratesList = method();
+getConeWhereListGeneratesList (List,List) := Cone => (B,C) -> (
+    vCones := {};
+    n := numgens ring B_0;
+    for v in C do (
+        mr := getLargestLexMonSmallerThanMon(B,v);
+        sigmaRv := getHalfSpace(mr,v);
+        vCones = append(vCones,sigmaRv);
+        print(mr,v,sigmaRv)
+        );
+    capSigma := intersection(fundRegion(n),coneFromHData(matrix vCones));
+    capSigma);
