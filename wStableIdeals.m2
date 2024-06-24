@@ -28,7 +28,9 @@ export {
     "getBgensTrees",
     "getLargestLexMonSmallerThanMon",
     "getConeWhereListGeneratesList",
-    "getHalfSpace"
+    "getHalfSpace",
+    "sortLex",
+    "getConeWhereListMissesItself"
     
     }
 
@@ -296,6 +298,10 @@ shadowGraph3 RingElement := Graph => opts -> m -> (
 
 
 
+----------------------------------------------------
+-- TRYING TO GET THE CONES NOW
+----------------------------------------------------
+
 -- method to get all the subleaves from a graph
 getBgensTrees = method();
 getBgensTrees Ideal := List => (I) -> (
@@ -329,6 +335,8 @@ getHalfSpace (RingElement,RingElement) := Cone => (u,v) -> (
     ineq := for i from 0 to #a-1 list ( b_i - a_i );
     ineq);
 
+
+
 -- generates the cone where a list of monomials B generates a list of monomials C
 getConeWhereListGeneratesList = method();
 getConeWhereListGeneratesList (List,List) := Cone => (B,C) -> (
@@ -342,3 +350,38 @@ getConeWhereListGeneratesList (List,List) := Cone => (B,C) -> (
         );
     capSigma := intersection(fundRegion(n),coneFromHData(matrix vCones));
     capSigma);
+
+
+
+
+sortLex = method();
+sortLex List := List => (A) -> (
+    S := ring A_0;
+    K := coefficientRing S;
+    gs := gens S;
+    S2 := K[gs,MonomialOrder=>Lex];
+    A2 := for a in A list ( sub(a,S2) );
+    A3 := sort A2;
+    A4 := for a in A3 list ( sub(a,S) );
+    A4);
+
+-- next, we need to get the space where ListDoesn'tGenerateItself
+-- this is the cone where B\subseteq Bgens(I) has no internal problems
+-- specifically, we're making sure that none of the generators in B generate other generators in B
+getConeWhereListMissesItself = method();
+getConeWhereListMissesItself (List) := Cone => (B) -> (
+    tauB := {};
+    n := numgens ring B_0;
+    Bs := sortLex(B);
+    k := #Bs;
+    for i from 0 to k-1 do (
+        bi := Bs_i;
+        for j from i+1 to k-1 do (
+            bj := Bs_j;
+            sigma := getHalfSpace(bj,bi);
+            -- note that i and j are reversed so we get the halfspace where bi does not generate bj
+            tauB = append(tauB,sigma);
+            );
+        );
+    tauB = intersection(coneFromHData(matrix tauB),fundRegion(n));
+    tauB);

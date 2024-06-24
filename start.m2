@@ -12,30 +12,36 @@ minD = 3;
 maxD = 5;
 K = ZZ/101;
 S = K[x_1..x_n];
-w = rsort(for i from 0 to n-1 list (random(1,maxW)));
-m1 = randomMonomial(random(minD,maxD),S);
-m2 = randomMonomial(random(minD,maxD),S);
-m3 = randomMonomial(random(minD,maxD),S);
-I = borelClosure(ideal(m1,m2,m3));
 
-G = getBgensTrees(I)
+--w = rsort(for i from 0 to n-1 list (random(1,maxW)));
+--m1 = randomMonomial(random(minD,maxD),S);
+--m2 = randomMonomial(random(minD,maxD),S);
+--m3 = randomMonomial(random(minD,maxD),S);
+--I = borelClosure(ideal(m1,m2,m3));
 
-L = delete(1, flatten (for g in G list leaves g_1))
-J = sub(ideal(L),S)
+--G = getBgensTrees(I)
 
-print(I==J)
+--L = delete(1, flatten (for g in G list leaves g_1))
+--J = sub(ideal(L),S)
 
-B = borelGens(I)
-v = ((entries gens I)_0)_0
-b = getLargestLexMonSmallerThanMon(B,v)
+--print(I==J)
+
+--B = borelGens(I)
+--v = ((entries gens I)_0)_0
+--b = getLargestLexMonSmallerThanMon(B,v)
+
+S = ZZ/101[x,y,z]
+I = borelClosure(ideal(z^5),Degrees=>{4,3,1})
+
+Bgens = {z^5,y*z^2,x*z,y^2}
+B = {z^5,y*z^2}
+C = toList ( set Bgens - set B )
+c1 = getConeWhereListGeneratesList(B,C)
+c2 = getConeWhereListMissesItself(B)
+c = intersection(c1,c2)
+print(rays c)
 
 
 
-S = K[x,y]
-I = ideal(y^4,x*y^2,x^2)
-Bgens = {y^4,x*y^2,x^2}
-B = {y^4}
-C = {x^2,x*y^2}
-c = getConeWhereListGeneratesList(B,C)
 
 
