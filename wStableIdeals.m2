@@ -30,7 +30,10 @@ export {
     "getConeWhereListGeneratesList",
     "getHalfSpace",
     "sortLex",
-    "getConeWhereListMissesItself"
+    "getConeWhereListMissesItself",
+    "shadowGraph3",
+    "getSubLeaves",
+    "getConeWhereBgensMissesQuotient"
     
     }
 
@@ -261,7 +264,6 @@ shadowGraph2 RingElement := Graph => opts -> m -> (
 -- Output: G_w(m)
 shadowGraph3 = method(Options => {Degrees=>null,stopMons=>{}});
 shadowGraph3 RingElement := Graph => opts -> m -> (
-
     S := ring m;
     K := coefficientRing S;
     n := numgens S;
@@ -278,7 +280,8 @@ shadowGraph3 RingElement := Graph => opts -> m -> (
     --G := graph({{1,gs_0}});
     L := delete(1, leaves G);
     stops := for stopMon in opts.stopMons list sub(stopMon,Sw);
-    buds := for l in L list (if ( (degree l)_0 < d ) and ( not isSubset({l},stops) ) then l else continue);
+    print(stops);
+    buds := for l in L list (if ( (degree l)_0 < d ) and ( not isSubset({sub(l,Sw)},stops) ) then l else continue);
     while #buds > 0 do (
         for bud in buds do (
             budFactored := factoredIndices(bud,w);
@@ -291,7 +294,7 @@ shadowGraph3 RingElement := Graph => opts -> m -> (
                 );
             );            
         L = delete(1, leaves G);
-        buds = for l in L list (if ( (degree l)_0 < d ) and ( not isSubset({l},stops) ) then l else continue);
+        buds = for l in L list (if ( (degree l)_0 < d ) and ( not isSubset({sub(l,Sw)},stops) ) then l else continue);
         );
 
     G);
@@ -348,6 +351,7 @@ getConeWhereListGeneratesList (List,List) := Cone => (B,C) -> (
         vCones = append(vCones,sigmaRv);
         print(mr,v,sigmaRv)
         );
+    print(vCones);
     capSigma := intersection(fundRegion(n),coneFromHData(matrix vCones));
     capSigma);
 
@@ -376,7 +380,7 @@ getConeWhereListMissesItself (List) := Cone => (B) -> (
     k := #Bs;
     for i from 0 to k-1 do (
         bi := Bs_i;
-        for j from i+1 to k-1 do (
+        for j from i to k-1 do (
             bj := Bs_j;
             sigma := getHalfSpace(bj,bi);
             -- note that i and j are reversed so we get the halfspace where bi does not generate bj
@@ -385,3 +389,38 @@ getConeWhereListMissesItself (List) := Cone => (B) -> (
         );
     tauB = intersection(coneFromHData(matrix tauB),fundRegion(n));
     tauB);
+
+
+getSubLeaves = method();
+getSubLeaves Graph := List => G -> (
+    Leaves := delete(1,leaves G);
+    Verts := vertices G;
+    Edges := edges G;
+    SubLeaves := {};
+    for leaf in Leaves do (
+        for u in Verts do (
+            if isMember( set{leaf,u}, Edges) then (
+                SubLeaves = append(SubLeaves,u);
+                );
+            );
+        );
+    delete(1,(toList (set SubLeaves))));
+
+
+
+getConeWhereBgensMissesQuotient = method();
+getConeWhereBgensMissesQuotient Ideal := Cone => I -> (
+    Bgens := borelGens(I);
+    gI := (entries gens I)_0;
+    n := numgens ring I;
+    ineqs := {};
+    for b in Bgens do (
+        Gb := shadowGraph3(b,stopMons=>gI);
+        U := getSubLeaves(Gb);
+        for u in U do (
+            -- append inequality forcing b to not generate u
+            ineqs = append(ineqs,getHalfSpace(u,b));
+            );
+        );
+    c := coneFromHData(matrix ineqs);
+    intersection(c,fundRegion(n)));

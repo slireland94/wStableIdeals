@@ -5,6 +5,7 @@
 
 needsPackage("wStableIdeals",Reload=>true)
 needsPackage("RandomIdeals")
+needsPackage("Graphs")
 
 n = 4;
 maxW = 5;
@@ -31,17 +32,21 @@ S = K[x_1..x_n];
 --b = getLargestLexMonSmallerThanMon(B,v)
 
 S = ZZ/101[x,y,z]
-I = borelClosure(ideal(z^5),Degrees=>{4,3,1})
-
-Bgens = {z^5,y*z^2,x*z,y^2}
-B = {z^5,y*z^2}
-C = toList ( set Bgens - set B )
-c1 = getConeWhereListGeneratesList(B,C)
-c2 = getConeWhereListMissesItself(B)
-c = intersection(c1,c2)
-print(rays c)
+I = borelClosure(ideal(z^8),Degrees=>{8,8,1})
+I = ideal(x^5,x^4*y*z,x^4*y^2,x^4*z^3,x^3*y^2*z^2,x^3*y^3*z,x^3*y^4,x^3*z^5,x^3*y*z^4)
+bgens = borelGens(I)
+gI = (entries gens I)_0
+comp = toList (set gI - set bgens)
 
 
+c = getConeWhereBgensMissesQuotient(I)
 
+c2 = getConeWhereListGeneratesList(bgens,comp)
 
-
+--Bgens = {z^5,y*z^2,x*z,y^2}
+--B = {z^5,y*z^2}
+--C = toList ( set Bgens - set B )
+--c1 = getConeWhereListGeneratesList(B,C)
+--c2 = getConeWhereListMissesItself(B)
+--c = intersection(c1,c2)
+--print(rays c)
