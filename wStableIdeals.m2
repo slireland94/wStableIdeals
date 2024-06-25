@@ -280,7 +280,6 @@ shadowGraph3 RingElement := Graph => opts -> m -> (
     --G := graph({{1,gs_0}});
     L := delete(1, leaves G);
     stops := for stopMon in opts.stopMons list sub(stopMon,Sw);
-    print(stops);
     buds := for l in L list (if ( (degree l)_0 < d ) and ( not isSubset({sub(l,Sw)},stops) ) then l else continue);
     while #buds > 0 do (
         for bud in buds do (
@@ -310,7 +309,6 @@ getBgensTrees = method();
 getBgensTrees Ideal := List => (I) -> (
     GI := (entries gens I)_0;
     Bgens := borelGens(I);
-    print(Bgens,GI);
     bTrees := for mi in Bgens list ( {mi,shadowGraph3(mi,stopMons=>GI)} );
     bTrees);
 
@@ -345,14 +343,16 @@ getConeWhereListGeneratesList = method();
 getConeWhereListGeneratesList (List,List) := Cone => (B,C) -> (
     vCones := {};
     n := numgens ring B_0;
-    for v in C do (
-        mr := getLargestLexMonSmallerThanMon(B,v);
-        sigmaRv := getHalfSpace(mr,v);
-        vCones = append(vCones,sigmaRv);
-        print(mr,v,sigmaRv)
+    capSigma := {};
+    if C == {} then capSigma = fundRegion(n) else (
+        for v in C do (
+            mr := getLargestLexMonSmallerThanMon(B,v);
+            --mr = B_0;
+            sigmaRv := getHalfSpace(mr,v);
+            vCones = append(vCones,sigmaRv);
+            );
+        capSigma = intersection(fundRegion(n),coneFromHData(matrix vCones));
         );
-    print(vCones);
-    capSigma := intersection(fundRegion(n),coneFromHData(matrix vCones));
     capSigma);
 
 
@@ -378,6 +378,7 @@ getConeWhereListMissesItself (List) := Cone => (B) -> (
     n := numgens ring B_0;
     Bs := sortLex(B);
     k := #Bs;
+    print(Bs);
     for i from 0 to k-1 do (
         bi := Bs_i;
         for j from i to k-1 do (

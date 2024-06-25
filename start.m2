@@ -31,17 +31,23 @@ S = K[x_1..x_n];
 --v = ((entries gens I)_0)_0
 --b = getLargestLexMonSmallerThanMon(B,v)
 
-S = ZZ/101[x,y,z]
-I = borelClosure(ideal(z^8),Degrees=>{8,8,1})
-I = ideal(x^5,x^4*y*z,x^4*y^2,x^4*z^3,x^3*y^2*z^2,x^3*y^3*z,x^3*y^4,x^3*z^5,x^3*y*z^4)
-bgens = borelGens(I)
-gI = (entries gens I)_0
-comp = toList (set gI - set bgens)
+--S = ZZ/101[x,y,z]
+--I = borelClosure(ideal(z^5),Degrees=>{4,3,1})
+--I = ideal(x^5,x^4*y*z,x^4*y^2,x^4*z^3,x^3*y^2*z^2,x^3*y^3*z,x^3*y^4,x^3*z^5,x^3*y*z^4)
+--bgens = borelGens(I)
+--gI = (entries gens I)_0
 
 
-c = getConeWhereBgensMissesQuotient(I)
+--B = {z^5,y*z^2,y^2}
+--comp = toList (set gI - set B)
 
-c2 = getConeWhereListGeneratesList(bgens,comp)
+--c1 = getConeWhereBgensMissesQuotient(I)
+--c2 = getConeWhereListGeneratesList(B,comp)
+--stableCone = intersection(c1,c2)
+
+--c3 = getConeWhereListMissesItself(B)
+
+---c = intersection({c1,c3})
 
 --Bgens = {z^5,y*z^2,x*z,y^2}
 --B = {z^5,y*z^2}
@@ -50,3 +56,16 @@ c2 = getConeWhereListGeneratesList(bgens,comp)
 --c2 = getConeWhereListMissesItself(B)
 --c = intersection(c1,c2)
 --print(rays c)
+
+S = ZZ/101[x,y]
+I = ideal(x^4,x^3*y^2,x^2*y^4,x*y^7,y^9)
+bgens = borelGens(I)
+
+
+B = bgens 
+--B = {y^9,x^2*y^4}
+C = toList (set bgens - set B)
+c1 = getConeWhereBgensMissesQuotient(I)
+c2 = getConeWhereListGeneratesList(B,C)
+c3 = getConeWhereListMissesItself(B)
+c = intersection({c1,c2,c3})
