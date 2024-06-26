@@ -15,7 +15,10 @@ export {
     "treeFromIdeal",
     "maxIndex",
     "factoredIndices",
-    "sortLex"
+    "sortLex",
+    "coneWhereShadowsMissEachother",
+    "getHalfSpace",
+    "fundRegion"
 
     }
 
@@ -148,9 +151,10 @@ treeFromIdeal Ideal := Graph => J -> (
         bgens := sortLex(borelGens(I));
         gI := (entries gens I)_0;
         m := bgens_0;
-        gs := gens ring m;
+        S := ring m;
+        gs := gens S;
         fm := factoredIndices(m);
-        trunk := for i from 0 to fm_0 list ({1,gs_i});
+        trunk := for i from 0 to fm_0 list ({sub(1,S),gs_i});
         tree := digraph(trunk);
         tf := true;
         while tf do (
@@ -169,5 +173,56 @@ treeFromIdeal Ideal := Graph => J -> (
     tree);
 
 
+-- possible weights region (nonincreasing)
+fundRegion = n -> (
+    Rays := {};
+    for i from 0 to n-1 do (
+        iRay := {};
+        for j from 0 to i do (
+            iRay = append(iRay,1);
+            );
+        for j from i+1 to n-1 do (
+            iRay = append(iRay,0);
+            );
+        Rays = append(Rays,iRay);
+        );
+    coneFromVData(transpose(matrix Rays)));
 
+
+
+-- gets space where u generates v
+getHalfSpace = method();
+getHalfSpace (RingElement,RingElement) := Cone => (u,v) -> (
+    a := (exponents u)_0;
+    b := (exponents v)_0;
+    ineq := for i from 0 to #a-1 list ( b_i - a_i );
+    ineq);
+
+
+-- now i need a function to get the cone where B\subseteq Bgens doesn't collapse
+coneWhereShadowsMissEachother = method();
+coneWhereShadowsMissEachother (Ideal,List) := Cone => (I,B) -> (
+    S := ring I;
+    Bs := for b in sortLex(B) list (sub(b,S));
+    n := numgens S;
+    r := #Bs;
+    ineqs := {};
+    tree := treeFromIdeal(I);
+    for i from 0 to r-2 do (
+        bStart := Bs_(i);
+        bEnd := Bs_(i+1);
+        di := #factoredIndices(bEnd);
+        bendPath := for bPath in findPaths(tree,sub(1,S),di) list ( if (last bPath) == bEnd then bPath else continue );
+        bendPath = delete(sub(1,S),bendPath_0);
+        for v in bendPath do (
+            vDeg := #factoredIndices(v);
+            maxTruncbStart := (factoredIndices(bStart))_(vDeg-1);
+            print(maxTruncbStart);
+            if maxIndex(v) <= maxTruncbStart then (
+                print(bStart," does not generate ",v,getHalfSpace(v,bStart));
+                ineqs = append(ineqs,getHalfSpace(v,bStart));
+                );
+            );
+        );
+    intersection(coneFromHData(matrix ineqs),fundRegion(n)));
 

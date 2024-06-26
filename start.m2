@@ -10,3 +10,8 @@ S = ZZ/101[x,y,z]
 I = borelClosure(ideal(z^5),Degrees=>{4,3,1})
 T = treeFromIdeal(I)
 
+
+B = borelGens(I)
+B = {z^5,y*z^2}
+c = coneWhereShadowsMissEachother(I,B)
+
