@@ -18,7 +18,8 @@ export {
     "sortLex",
     "coneWhereShadowsMissEachother",
     "getHalfSpace",
-    "fundRegion"
+    "fundRegion",
+    "coneWhereShadowsMissQuotient"
 
     }
 
@@ -224,5 +225,26 @@ coneWhereShadowsMissEachother (Ideal,List) := Cone => (I,B) -> (
                 );
             );
         );
-    intersection(coneFromHData(matrix ineqs),fundRegion(n)));
+    returnCone := if ineqs == {} then fundRegion(n) else intersection(coneFromHData(matrix ineqs),fundRegion(n));
+    returnCone);
 
+
+coneWhereShadowsMissQuotient = method();
+coneWhereShadowsMissQuotient (Ideal,List) := Cone => (I,B) -> (
+    tree := treeFromIdeal(I);
+    K := coefficientRing ring I;
+    n := numgens ring I;
+    gs := gens ring I;
+    Slex := K[gs,MonomialOrder=>Lex];
+    verts := toList( set (vertices tree) - set (sinks tree) );
+    ineqs := {};
+    for vert in verts do (
+        for b in B do (
+            if sub(vert,Slex) > sub(b,Slex) then (
+                print(vert,">",b);
+                ineqs = append(ineqs,getHalfSpace(vert,b));
+                );
+            );
+        );
+    returnCone := if ineqs == {} then fundRegion(n) else intersection(coneFromHData(matrix ineqs),fundRegion(n));
+    returnCone);
