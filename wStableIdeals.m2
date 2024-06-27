@@ -21,7 +21,11 @@ export {
     "fundRegion",
     "coneWhereShadowsMissQuotient",
     "getLargestLexGeneratorFromList",
-    "coneWhereShadowsGenerateIdeal"
+    "coneWhereShadowsGenerateIdeal",
+    "stopMons",
+    "treeFromMonomial",
+    "tableOfTrees",
+    "getLargestLexMonThatGeneratesMon"
 
     }
 
@@ -105,7 +109,7 @@ borelGens Ideal := List => I -> (
 
 --------------------------------------------------------
 --------------------------------------------------------
--- FINDING GOOD WEIGHT VECTORS
+-- CONSTRUCTING TREES
 --------------------------------------------------------
 --------------------------------------------------------
 
@@ -130,6 +134,77 @@ factoredIndices RingElement := List => m -> (
     factorList);
 
 
+treeFromMonomialOld = method(Options => {stopMons=>{}});
+treeFromMonomialOld RingElement := Graph => opts -> m -> (
+    S := ring m;
+    gs := gens S;
+    stops := for mon in opts.stopMons list sub(mon,S);
+    fm := factoredIndices(m);
+    trunk := for i from 0 to fm_0 list ({sub(1,S),gs_i});
+    tree := digraph(trunk);
+    tf := true;
+    i := #fm-1;
+    while tf do (
+        leafs := for v in (sinks tree) list ( if (not isSubset({v},stops)) then v else continue );
+        for leaf in leafs do (
+            leafD := #factoredIndices(leaf);
+            minBranch := maxIndex(leaf);
+            maxBranch := if leafD < #fm then ( fm_leafD ) else ( max(fm) );
+            branchIndices := for i from minBranch to maxBranch list i;
+            newVerts := for i in branchIndices list leaf*gs_i;
+            newEdges := for i in branchIndices list set {leaf*gs_i,leaf};
+            tree = addVertices(tree,newVerts);
+            tree = addEdges'(tree,newEdges);
+            );
+        i = i - 1;
+        if #leafs == 0 or i == 0 then tf = false;
+        );
+    tree);
+
+
+treeFromMonomial = method(Options => {stopMons=>{}});
+treeFromMonomial RingElement := Graph => opts -> m -> (
+    S := ring m;
+    gs := gens S;
+    stops := for mon in opts.stopMons list sub(mon,S);
+    fm := factoredIndices(m);
+    trunk := for i from 0 to fm_0 list ({sub(1,S),gs_i});
+    tree := digraph(trunk);
+    tf := true;
+    i := #fm-1;
+    while tf do (
+        leafs := for v in (sinks tree) list ( if (not isSubset({v},stops)) then v else continue );
+        for leaf in leafs do (
+            leafD := #factoredIndices(leaf);
+            minBranch := maxIndex(leaf);
+            maxBranch := if leafD < #fm then ( fm_leafD ) else ( max(fm) );
+            branchIndices := for i from minBranch to maxBranch list i;
+            newVerts := for i in branchIndices list leaf*gs_i;
+            newEdges := for i in branchIndices list set {leaf*gs_i,leaf};
+            tree = addVertices(tree,newVerts);
+            tree = addEdges'(tree,newEdges);
+            );
+        i = i - 1;
+        if #leafs == 0 or i == 0 then tf = false;
+        );
+    tree);
+
+tableOfTrees = method(Options => {stopMons=>{}});
+tableOfTrees List := HashTable => opts -> B -> (
+    stops := opts.stopMons;
+    L := for b in B list (b => treeFromMonomial(b,stopMons=>stops));
+    new HashTable from L);
+
+
+
+
+--------------------------------------------------------
+--------------------------------------------------------
+-- CONVEX GEOMETRY
+--------------------------------------------------------
+--------------------------------------------------------
+
+
 sortLex = method();
 sortLex List := List => (A) -> (
     S := ring A_0;
@@ -140,41 +215,6 @@ sortLex List := List => (A) -> (
     A3 := sort A2;
     A4 := for a in A3 list ( sub(a,S) );
     A4);
-
-
--- construct the tree corresponding to a strongly stable ideal
--- vertices are monomials
--- leaves are G(I)
--- edges are weighted by the w_i
-
-treeFromIdeal = method();
-treeFromIdeal Ideal := Graph => J -> (
-    if not isMonomialIdeal J then print("Ideal is Not a Monomial Ideal!") else I:= monomialIdeal J;
-    if not isBorel I then print("Ideal is Not Strongly Stable!") else (
-        bgens := sortLex(borelGens(I));
-        gI := (entries gens I)_0;
-        m := bgens_0;
-        S := ring m;
-        gs := gens S;
-        fm := factoredIndices(m);
-        trunk := for i from 0 to fm_0 list ({sub(1,S),gs_i});
-        tree := digraph(trunk);
-        tf := true;
-        while tf do (
-            leafs := for v in (sinks tree) list ( if not isSubset({v},gI) then v else continue );
-            for leaf in leafs do (
-                leafD := #factoredIndices(leaf);
-                branchIndices := for i from maxIndex(leaf) to fm_(leafD) list i;
-                newVerts := for i in branchIndices list leaf*gs_i;
-                newEdges := for i in branchIndices list set {leaf*gs_i,leaf};
-                tree = addVertices(tree,newVerts);
-                tree = addEdges'(tree,newEdges);
-                );
-            if #leafs == 0 then tf = false;
-            );
-        );
-    tree);
-
 
 -- possible weights region (nonincreasing)
 fundRegion = n -> (
@@ -191,8 +231,6 @@ fundRegion = n -> (
         );
     coneFromVData(transpose(matrix Rays)));
 
-
-
 -- gets space where u generates v
 getHalfSpace = method();
 getHalfSpace (RingElement,RingElement) := Cone => (u,v) -> (
@@ -201,119 +239,69 @@ getHalfSpace (RingElement,RingElement) := Cone => (u,v) -> (
     ineq := for i from 0 to #a-1 list ( b_i - a_i );
     ineq);
 
-
--- now i need a function to get the cone where B\subseteq Bgens doesn't collapse
--- feed this B\subseteq Bgens(I)
-coneWhereShadowsMissEachotherOld = method();
-coneWhereShadowsMissEachotherOld (Ideal,List) := Cone => (I,B) -> (
-    S := ring I;
-    Bs := for b in sortLex(B) list (sub(b,S));
-    n := numgens S;
-    r := #Bs;
-    ineqs := {};
-    tree := treeFromIdeal(I);
-    for i from 0 to r-2 do (
-        bStart := Bs_(i);
-        bEnd := Bs_(i+1);
-        di := #factoredIndices(bEnd);
-        bendPath := for bPath in findPaths(tree,sub(1,S),di) list ( if (last bPath) == bEnd then bPath else continue );
-        bendPath = delete(sub(1,S),bendPath_0);
-        for v in bendPath do (
-            vDeg := #factoredIndices(v);
-            fbs := factoredIndices(bStart);
-            maxTruncbStart := if vDeg < #fbs then ( fbs_vDeg ) else ( maxIndex(bStart) );
-            if maxIndex(v) <= maxTruncbStart then (
-                print(bStart,v,bEnd);
-                ineqs = append(ineqs,getHalfSpace(v,bStart));
-                );
-            );
-        );
-    returnCone := if ineqs == {} then fundRegion(n) else intersection(coneFromHData(matrix ineqs),fundRegion(n));
-    returnCone);
-
--- now i need a function to get the cone where B\subseteq Bgens doesn't collapse
--- feed this B\subseteq Bgens(I)
-coneWhereShadowsMissEachother = method();
-coneWhereShadowsMissEachother (Ideal,List) := Cone => (I,B) -> (
-    S := ring I;
-    Bs := for b in sortLex(B) list (sub(b,S));
-    n := numgens S;
-    r := #Bs;
-    ineqs := {};
-    tree := treeFromIdeal(I);
-    for i from 1 to #Bs-1 do (
-        bEnd := Bs_i;
-        bStart := getLargestLexGeneratorFromList(bEnd,Bs);
-        di := #factoredIndices(bEnd);
-        bendPath := for bPath in findPaths(tree,sub(1,S),di) list ( if (last bPath) == bEnd then bPath else continue );
-        bendPath = delete(sub(1,S),bendPath_0);
-        for v in bendPath do (
-            vDeg := #factoredIndices(v);
-            fbs := factoredIndices(bStart);
-            maxTruncbStart := if vDeg < #fbs then ( fbs_vDeg ) else ( maxIndex(bStart) );
-            if maxIndex(v) <= maxTruncbStart then (
-                print(bStart,v,bEnd);
-                ineqs = append(ineqs,getHalfSpace(v,bStart));
-                );
-            );
-        );
-    returnCone := if ineqs == {} then fundRegion(n) else intersection(coneFromHData(matrix ineqs),fundRegion(n));
-    returnCone);
-
-
--- feed this B = Bgens(I)
-coneWhereShadowsMissQuotient = method();
-coneWhereShadowsMissQuotient (Ideal,List) := Cone => (I,B) -> (
-    tree := treeFromIdeal(I);
-    K := coefficientRing ring I;
-    n := numgens ring I;
-    gs := gens ring I;
-    Slex := K[gs,MonomialOrder=>Lex];
-    verts := toList( set (vertices tree) - set (sinks tree) );
-    ineqs := {};
-    for vert in verts do (
-        for b in B do (
-            if sub(vert,Slex) > sub(b,Slex) then (
-                ineqs = append(ineqs,getHalfSpace(vert,b));
-                );
-            );
-        );
-    returnCone := if ineqs == {} then fundRegion(n) else intersection(coneFromHData(matrix ineqs),fundRegion(n));
-    returnCone);
-
-
--- finds the lex largest monomial in B which can generate leaf
-getLargestLexGeneratorFromList = method();
-getLargestLexGeneratorFromList (RingElement,List) := RingElement => (leaf,B) -> (
-    S := ring leaf;
-    K := coefficientRing S;
+-- gets the largest lex monomial from the list B that generates v
+getLargestLexMonThatGeneratesMon = method();
+getLargestLexMonThatGeneratesMon (List,RingElement) := RingElement => (B,v) -> (
+    S := ring v;
     gs := gens S;
+    K := coefficientRing S;
     Slex := K[gs,MonomialOrder=>Lex];
-    Bs := reverse (for b in sortLex(B) list sub(b,Slex));
-    v := sub(leaf,Slex);
-    i := 0;
-    b := "No Generators Found in List";
+    Bs := for b in sort B list sub(b,Slex);
+    vlex := sub(v,Slex);
+    r := #Bs;
     tf := true;
-    while i<#Bs and tf do (
-        if (Bs_i < v) and isSubset({v},vertices treeFromIdeal(borel monomialIdeal ideal(Bs_i))) then (b := Bs_i; tf=false);
-        i = i + 1;
+    TT := tableOfTrees(Bs,stopMons=>{vlex});
+    answer := "No monomials in list generate given monomial!";
+    for i from 0 to r-1 do (
+        b := Bs_i;
+        if tf and b <= vlex and isSubset({vlex},sinks TT#(b)) then (
+            answer = sub(b,S);
+            tf = false;
+            );
         );
-    b);
+    answer);
 
 
+coneWhereShadowsMissQuotient = method();
+coneWhereShadowsMissQuotient Ideal := Cone => I -> (
+    n := numgens ring I;
+    bgens := borelGens(I);
+    G := (entries gens I)_0;
+    TT := tableOfTrees(bgens,stopMons=>G);
+    ineqs := {};
+    for b in bgens do (
+        tb := TT#b;
+        notIdeal := toList(set vertices tb - set sinks tb);
+        for u in notIdeal do (
+            ineqs = append(ineqs,getHalfSpace(u,b));
+            );
+        );
+    returnCone := if ineqs == {} then fundRegion(n) else intersection(coneFromHData(matrix ineqs),fundRegion(n));
+    returnCone);
 
+coneWhereShadowsMissEachother = method();
+coneWhereShadowsMissEachother List := Cone => B -> (
+    n := numgens ring B_0;
+    ineqs := {};
+    for b in B do (
+        mb := getLargestLexMonThatGeneratesMon(delete(b,B),b);
+        if class mb === String then (continue) else (
+            ineqs = append(ineqs,getHalfSpace(b,mb));
+            );
+        );
+    returnCone := if ineqs == {} then fundRegion(n) else intersection(coneFromHData(matrix ineqs),fundRegion(n));
+    returnCone);
 
 coneWhereShadowsGenerateIdeal = method();
-coneWhereShadowsGenerateIdeal (Ideal,List) := Cone => (I,B) -> (
-    gI := (entries gens I)_0;
-    S := ring I;
-    n := numgens S;
-    B2 := for b in B list (sub(b,S));
-    C := toList (set gI - set B2);
+coneWhereShadowsGenerateIdeal (List,Ideal) := Cone => (B,I) -> (
+    n := numgens ring I;
     ineqs := {};
-    for g in C do (
-        bg := getLargestLexGeneratorFromList(g,B2);
-        ineqs = append(ineqs,getHalfSpace(bg,g));
+    G := toList (set (entries gens I)_0 - set B);
+    print(G);
+    for v in G do (
+        mv := getLargestLexMonThatGeneratesMon(B,v);
+        ineqs = append(ineqs,getHalfSpace(mv,v));
+        print(mv,v);
         );
     returnCone := if ineqs == {} then fundRegion(n) else intersection(coneFromHData(matrix ineqs),fundRegion(n));
     returnCone);

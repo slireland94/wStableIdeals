@@ -4,16 +4,16 @@
 -- path = append(path, ".Macaulay2/GitHub/wStableIdeals/")
 
 needsPackage("wStableIdeals",Reload=>true)
-
+needsPackage("RandomIdeals")
 
 S = ZZ/101[x,y,z]
-I = borelClosure(ideal(z^5),Degrees=>{4,3,1})
-T = treeFromIdeal(I)
+I = borelClosure(ideal(z^7),Degrees=>{7,6,1})
+I = borelClosure(ideal(y^2*z^5,y^3*z,x^2*z))
 
+B = {y^2*z^5,y^3*z}
 
-B = {z^5}
-c1 = coneWhereShadowsMissEachother(I,B)
-c2 = coneWhereShadowsMissQuotient(I,borelGens(I))
-c3 = coneWhereShadowsGenerateIdeal(I,B)
+c1 = coneWhereShadowsMissEachother(B)
+c2 = coneWhereShadowsMissQuotient(I)
+c3 = coneWhereShadowsGenerateIdeal(B,I)
 c = intersection({c1,c2,c3})
-print(rays c)
+print(B,rays c)
