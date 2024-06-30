@@ -12,20 +12,19 @@ newPackage(
 export {
     "borelClosure",
     "borelGens",
-    "treeFromIdeal",
-    "maxIndex",
-    "factoredIndices",
     "sortLex",
-    "coneWhereShadowsMissEachother",
     "getHalfSpace",
-    "fundRegion",
+    "coneWhereShadowsMissEachother",
     "coneWhereShadowsMissQuotient",
-    "getLargestLexGeneratorFromList",
     "coneWhereShadowsGenerateIdeal",
     "stopMons",
     "treeFromMonomial",
-    "tableOfTrees",
-    "getLargestLexMonThatGeneratesMon"
+    "stableCone",
+    "possibleBgens",
+    "stableFan",
+    "chamberConeTable",
+    "goodWeightCone",
+    "goodWeightVector"
 
     }
 
@@ -165,27 +164,31 @@ treeFromMonomialOld RingElement := Graph => opts -> m -> (
 treeFromMonomial = method(Options => {stopMons=>{}});
 treeFromMonomial RingElement := Graph => opts -> m -> (
     S := ring m;
+    n := numgens S;
     gs := gens S;
     stops := for mon in opts.stopMons list sub(mon,S);
     fm := factoredIndices(m);
+    dm := #fm;
     trunk := for i from 0 to fm_0 list ({sub(1,S),gs_i});
     tree := digraph(trunk);
     tf := true;
-    i := #fm-1;
+    mE := (exponents m)_0;
+    newLeafs := for v in (sinks tree) list ( if (not isSubset({v},stops)) and (#factoredIndices(v)<dm) then v else continue );
     while tf do (
-        leafs := for v in (sinks tree) list ( if (not isSubset({v},stops)) then v else continue );
+        leafs := for v in newLeafs list ( if (not isSubset({v},stops)) and (#factoredIndices(v)<dm) then v else continue );
+        if #leafs == 0 then tf = false;
+        newLeafs = {};
         for leaf in leafs do (
-            leafD := #factoredIndices(leaf);
+            leafE := (exponents leaf)_0;
+            diffExpVec := for i from 0 to n-1 list ( mE_i - leafE_i );
+            maxBranch := n - 1 - position(reverse diffExpVec,i -> i>0);
             minBranch := maxIndex(leaf);
-            maxBranch := if leafD < #fm then ( fm_leafD ) else ( max(fm) );
-            branchIndices := for i from minBranch to maxBranch list i;
-            newVerts := for i in branchIndices list leaf*gs_i;
-            newEdges := for i in branchIndices list set {leaf*gs_i,leaf};
-            tree = addVertices(tree,newVerts);
-            tree = addEdges'(tree,newEdges);
+            for i from minBranch to maxBranch do (
+                tree = addVertex(tree,leaf*gs_i);
+                tree = addEdge(tree,set{leaf*gs_i,leaf});
+                newLeafs = append(newLeafs,leaf*gs_i);
+                );
             );
-        i = i - 1;
-        if #leafs == 0 or i == 0 then tf = false;
         );
     tree);
 
@@ -297,11 +300,90 @@ coneWhereShadowsGenerateIdeal (List,Ideal) := Cone => (B,I) -> (
     n := numgens ring I;
     ineqs := {};
     G := toList (set (entries gens I)_0 - set B);
-    print(G);
     for v in G do (
         mv := getLargestLexMonThatGeneratesMon(B,v);
         ineqs = append(ineqs,getHalfSpace(mv,v));
-        print(mv,v);
         );
     returnCone := if ineqs == {} then fundRegion(n) else intersection(coneFromHData(matrix ineqs),fundRegion(n));
     returnCone);
+
+stableCone = method();
+stableCone Ideal := Cone => I -> (
+    stable := intersection(coneWhereShadowsGenerateIdeal(borelGens(I),I),coneWhereShadowsMissQuotient(I));
+    stable);
+
+stableFan = method();
+stableFan Ideal := Fan => I -> (
+    allCones := {};
+    n := numgens ring I;
+    potentialLists := possibleBgens(I);
+    c0 := coneWhereShadowsMissQuotient(I);
+    for B in potentialLists do (
+        c1 := coneWhereShadowsGenerateIdeal(B,I);
+        c2 := coneWhereShadowsMissEachother(B);
+        Bcone := intersection({c0,c1,c2});
+        allCones = append(allCones,Bcone);
+        if dim Bcone == n then (print(B,rays Bcone));
+        );
+    fan allCones);
+
+possibleBgens = method();
+possibleBgens Ideal := List => I -> (
+    bgens := sortLex borelGens(I);
+    potentialLists := {};
+    r := #bgens;
+    smallest := bgens_0;
+    extra := for sett in subsets(set bgens - set {smallest}) list toList sett;
+    for thing in extra do (
+        potential := join({smallest},thing);
+        potentialLists = append(potentialLists,potential);
+        );
+    potentialLists);
+
+chamberConeTable = method();
+chamberConeTable Ideal := HashTable => I -> (
+    n := numgens ring I;
+    potentialLists := possibleBgens(I);
+    actualLists := {};
+    actualCones := {};
+    c0 := coneWhereShadowsMissQuotient(I);
+    for B in potentialLists do (
+        c1 := coneWhereShadowsGenerateIdeal(B,I);
+        c2 := coneWhereShadowsMissEachother(B);
+        Bcone := intersection({c0,c1,c2});
+        if dim Bcone == n then (actualLists = append(actualLists,B); actualCones = append(actualCones,Bcone));
+        );
+    k := #actualLists;
+    H := hashTable(for i from 0 to k-1 list (#actualLists_i,actualLists_i)=>actualCones_i);
+    H);
+
+goodWeightCone = method();
+goodWeightCone Ideal := Cone => I -> (
+    H := chamberConeTable I;
+    beez := keys H;
+    k := (beez_0)_0;
+    j := #beez;
+    for i from 0 to j-1 do (
+        if (beez_i)_0 < (beez_k)_0 then k = i;
+        );
+    goodCone := H#(beez_k);
+    goodCone);
+
+goodWeightVector = method();
+goodWeightVector Ideal := List => I -> (
+    goodCone := goodWeightCone I;
+    n := numgens ring I;
+    rayz := rays goodCone;
+    origin := transpose matrix {apply(n,i->0)};
+    OGpoints := origin|rayz;
+    points := OGpoints;
+    P := convexHull(points);
+    a := 1;
+    L := interiorLatticePoints P;
+    while L == {} do (
+        a = a + 1;
+        points = a*OGpoints;
+        P = convexHull(points);
+        L = interiorLatticePoints P;
+        );
+    (entries flatten L_0)_0);
