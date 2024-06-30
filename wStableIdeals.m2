@@ -24,7 +24,8 @@ export {
     "stableFan",
     "chamberConeTable",
     "goodWeightCone",
-    "goodWeightVector"
+    "goodWeightVector",
+    "getLargestLexMonThatGeneratesMon"
 
     }
 
@@ -249,7 +250,7 @@ getLargestLexMonThatGeneratesMon (List,RingElement) := RingElement => (B,v) -> (
     gs := gens S;
     K := coefficientRing S;
     Slex := K[gs,MonomialOrder=>Lex];
-    Bs := for b in sort B list sub(b,Slex);
+    Bs := reverse sort(for b in B list sub(b,Slex));
     vlex := sub(v,Slex);
     r := #Bs;
     tf := true;
@@ -318,10 +319,13 @@ stableFan Ideal := Fan => I -> (
     n := numgens ring I;
     potentialLists := possibleBgens(I);
     c0 := coneWhereShadowsMissQuotient(I);
+    c1 := 0;
+    c2 := 0;
+    Bcone := 0;
     for B in potentialLists do (
-        c1 := coneWhereShadowsGenerateIdeal(B,I);
-        c2 := coneWhereShadowsMissEachother(B);
-        Bcone := intersection({c0,c1,c2});
+        c1 = coneWhereShadowsGenerateIdeal(B,I);
+        c2 = coneWhereShadowsMissEachother(B);
+        Bcone = intersection({c0,c1,c2});
         allCones = append(allCones,Bcone);
         if dim Bcone == n then (print(B,rays Bcone));
         );
