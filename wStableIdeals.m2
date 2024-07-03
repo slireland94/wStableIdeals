@@ -25,7 +25,9 @@ export {
     "chamberConeTable",
     "goodWeightCone",
     "goodWeightVector",
-    "getLargestLexMonThatGeneratesMon"
+    "getLargestLexMonThatGeneratesMon",
+    "tableOfTrees",
+    "stopDeg"
 
     }
 
@@ -162,14 +164,14 @@ treeFromMonomialOld RingElement := Graph => opts -> m -> (
     tree);
 
 
-treeFromMonomial = method(Options => {stopMons=>{}});
+treeFromMonomial = method(Options => {stopMons=>{},stopDeg=>null});
 treeFromMonomial RingElement := Graph => opts -> m -> (
     S := ring m;
     n := numgens S;
     gs := gens S;
     stops := for mon in opts.stopMons list sub(mon,S);
     fm := factoredIndices(m);
-    dm := #fm;
+    dm := if opts.stopDeg===null then (#fm) else (opts.stopDeg);
     trunk := for i from 0 to fm_0 list ({sub(1,S),gs_i});
     tree := digraph(trunk);
     tf := true;
@@ -300,12 +302,18 @@ coneWhereShadowsGenerateIdeal = method();
 coneWhereShadowsGenerateIdeal (List,Ideal) := Cone => (B,I) -> (
     n := numgens ring I;
     ineqs := {};
+    trigger := false;
     G := toList (set (entries gens I)_0 - set B);
+    print("\n");
+    print(B);
     for v in G do (
         mv := getLargestLexMonThatGeneratesMon(B,v);
+        if class mv === String then (trigger=true; print("Nothing generates ",v); break;);
+        print(mv,v,getHalfSpace(mv,v));
         ineqs = append(ineqs,getHalfSpace(mv,v));
         );
     returnCone := if ineqs == {} then fundRegion(n) else intersection(coneFromHData(matrix ineqs),fundRegion(n));
+    if trigger then returnCone = coneFromVData(transpose matrix{apply(n,i->0)});
     returnCone);
 
 stableCone = method();
