@@ -29,7 +29,8 @@ export {
     "tableOfTrees",
     "stopDeg",
     "treeFromIdeal",
-    "factoredGens"
+    "factoredGens",
+    "principalCone"
 
     }
 
@@ -256,3 +257,18 @@ getHalfSpace (RingElement,RingElement) := Cone => (u,v) -> (
     ineq := for i from 0 to #a-1 list ( b_i - a_i );
     ineq);
 
+principalCone = method();
+principalCone Ideal := Cone => I -> (
+    tree := treeFromIdeal(I);
+    G := sortLex (entries gens I)_0;
+    m := G_0;
+    V := sinks tree;
+    U := toList( set vertices tree - set sinks tree );
+    ineqs := {};
+    for v in V do (
+        ineqs = append(ineqs,getHalfSpace(m,v));
+        );
+    for u in U do (
+        ineqs = append(ineqs,getHalfSpace(u,m));
+        );
+    coneFromHData(matrix ineqs));
