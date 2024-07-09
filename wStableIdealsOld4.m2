@@ -30,9 +30,7 @@ export {
     "stopDeg",
     "treeFromIdeal",
     "factoredGens",
-    "principalCone",
-    "sigmaUV",
-    "tauMV"
+    "principalCone"
 
     }
 
@@ -140,41 +138,42 @@ factoredIndices RingElement := List => m -> (
     );
     factorList);
 
-treeFromMonomial = method(Options => {Weights=>null});
+treeFromMonomial = method(Options => {stopMons=>{},stopDeg=>null});
 treeFromMonomial RingElement := Graph => opts -> m -> (
     S := ring m;
-    K := coefficientRing S;
     n := numgens S;
-    w := if opts.Weights===null then apply(n,i->1) else (opts.Weights);
-    R := K[vars(1..n)];
-    psi := psiMap(S,R,w);
-    psim := psi(m);
-    fm := factoredIndices(psim);
-    d := #fm;
     gs := gens S;
+    stops := for mon in opts.stopMons list sub(mon,S);
+    fm := factoredIndices(m);
+    dm := if opts.stopDeg===null then (#fm) else (opts.stopDeg);
     trunk := for i from 0 to fm_0 list ({sub(1,S),gs_i});
     tree := digraph(trunk);
     tf := true;
+    mE := (exponents m)_0;
+    newLeafs := for v in (sinks tree) list ( if (not isSubset({v},stops)) and (#factoredIndices(v)<dm) then v else continue );
     while tf do (
-        leafs := for v in (sinks tree) list ( if #factoredIndices(psi(v)) < d  then v else continue );
+        leafs := for v in newLeafs list ( if (not isSubset({v},stops)) and (#factoredIndices(v)<dm) then v else continue );
         if #leafs == 0 then tf = false;
-        newLeafs := {};
+        newLeafs = {};
         for leaf in leafs do (
-            fleaf := factoredIndices(psi(leaf));
-            maxBranch := fm_(#fleaf);
+            leafE := (exponents leaf)_0;
+            diffExpVec := for i from 0 to n-1 list ( mE_i - leafE_i );
+            maxBranch := n - 1 - position(reverse diffExpVec,i -> i>0);
             minBranch := maxIndex(leaf);
             for i from minBranch to maxBranch do (
-                newVert := leaf*gs_i;
-                tree = addVertex(tree,newVert);
-                tree = addEdge(tree,set{newVert,leaf});
-                newLeafs = append(newLeafs,newVert);
+                tree = addVertex(tree,leaf*gs_i);
+                tree = addEdge(tree,set{leaf*gs_i,leaf});
+                newLeafs = append(newLeafs,leaf*gs_i);
                 );
             );
-        leafs = newLeafs;
         );
     tree);
 
-
+tableOfTrees = method(Options => {stopMons=>{}});
+tableOfTrees List := HashTable => opts -> B -> (
+    stops := opts.stopMons;
+    L := for b in B list (b => treeFromMonomial(b,stopMons=>stops));
+    new HashTable from L);
 
 
 factoredGens = method();
@@ -250,22 +249,26 @@ fundRegion = n -> (
         );
     coneFromVData(transpose(matrix Rays)));
 
--- gets space where degree of v is larger or equal to degree of u
-sigmaUV = method();
-sigmaUV (RingElement,RingElement) := List => (u,v) -> (
+-- gets space where u generates v
+getHalfSpace = method();
+getHalfSpace (RingElement,RingElement) := Cone => (u,v) -> (
     a := (exponents u)_0;
     b := (exponents v)_0;
     ineq := for i from 0 to #a-1 list ( b_i - a_i );
     ineq);
 
--- gets space where branching structure of T_{w,m} agrees (k=max(trunc_{degv+1}(\psi(m))))
-tauMV = method();
-tauMV (RingElement,RingElement,ZZ) := List => (m,v,k) -> (
-    a := (exponents m)_0;
-    b := (exponents v)_0;
-    ineq1 := for i from 0 to k-1 list ( a_i - b_i );
-    ineq2 := for i from k to #a-1 list ( -b_i );
-    ineq := join(ineq1,ineq2);
-    ineq);
-
 principalCone = method();
+principalCone Ideal := Cone => I -> (
+    tree := treeFromIdeal(I);
+    G := sortLex (entries gens I)_0;
+    m := G_0;
+    V := sinks tree;
+    U := toList( set vertices tree - set sinks tree );
+    ineqs := {};
+    for v in V do (
+        ineqs = append(ineqs,getHalfSpace(m,v));
+        );
+    for u in U do (
+        ineqs = append(ineqs,getHalfSpace(u,m));
+        );
+    coneFromHData(matrix ineqs));
