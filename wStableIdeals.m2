@@ -263,9 +263,37 @@ tauMV = method();
 tauMV (RingElement,RingElement,ZZ) := List => (m,v,k) -> (
     a := (exponents m)_0;
     b := (exponents v)_0;
-    ineq1 := for i from 0 to k-1 list ( a_i - b_i );
-    ineq2 := for i from k to #a-1 list ( -b_i );
+    ineq1 := for i from 0 to k-2 list ( b_i - a_i );
+    ineq2 := for i from k-1 to #a-1 list ( b_i );
     ineq := join(ineq1,ineq2);
     ineq);
 
 principalCone = method();
+principalCone Ideal := Cone => I -> (
+    m := (sortLex((entries gens I)_0))_0;
+    S := ring I;
+    n := numgens S;
+    gs := gens S;
+    tree := treeFromIdeal(I);
+    verts := vertices(tree);
+    sink := sinks(tree);
+    branchPoints := toList( set verts - set sink );
+    ineqs := {};
+    -- make sure every branch is correct
+    for v in branchPoints do (
+        k := 1;
+        for j from 0 to n-1 do (
+            if isSubset({v*gs_j},verts) then k = j+1;
+            );
+        ineqs = append(ineqs,tauMV(m,v,k));
+        );
+    -- make sure sinks have degree greater than or equal to m
+    for v in sink do (
+        ineqs = append(ineqs,sigmaUV(m,v));
+        );
+    -- make sure degree of branching points is less than m
+    for u in branchPoints do (
+        ineqs = append(ineqs,sigmaUV(u,m));
+        );
+    returnCone := intersection(fundRegion(n),coneFromHData(matrix ineqs));
+    returnCone);
