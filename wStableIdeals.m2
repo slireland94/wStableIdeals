@@ -1,42 +1,23 @@
 newPackage(
     "wStableIdeals",
     Version => "0.1",
-    Date => "June 30, 2024",
+    Date => "July 25, 2024",
     Headline => "A Package for Computing with w-Stable Ideals",
     Authors => {{ Name => "Seth Ireland", Email => "seth.ireland@colostate.edu", HomePage => "sethireland.com"}},
     AuxiliaryFiles => false,
     DebuggingMode => true,
-    PackageExports => {"Polyhedra","SRdeformations","Graphs"}
+    PackageExports => {"Graphs","Polyhedra","SRdeformations"}
     )
 
 export {
     "borelClosure",
     "borelGens",
     "sortLex",
-    "getHalfSpace",
-    "coneWhereShadowsMissEachother",
-    "coneWhereShadowsMissQuotient",
-    "coneWhereShadowsGenerateIdeal",
-    "stopMons",
     "treeFromMonomial",
-    "stableCone",
-    "possibleBgens",
-    "stableFan",
-    "chamberConeTable",
-    "goodWeightCone",
-    "goodWeightVector",
-    "getLargestLexMonThatGeneratesMon",
-    "tableOfTrees",
-    "stopDeg",
     "treeFromIdeal",
-    "factoredGens",
     "principalCone",
-    "sigmaUV",
-    "tauMV"
-
+    "principalWeightVector",
     }
-
---  path = append(path, ".Macaulay2/GitHub/wStableIdeals/")
 
 
 --------------------------------------------------------
@@ -58,11 +39,11 @@ psiMap := (S,R,degs) -> (
     );
 
 
-borelClosure = method(Options => {Degrees => null});
+borelClosure = method(Options => {Weights => null});
 borelClosure Ideal := Ideal => opts -> I -> (
     S := ring I;
     n := numgens S;
-    w := if opts.Degrees === null then for i from 1 to n list 1 else opts.Degrees;
+    w := if opts.Weights === null then for i from 1 to n list 1 else opts.Weights;
     startIdeal := monomialIdeal I;
     K := coefficientRing S;
     R := K[vars (1..n)];
@@ -83,7 +64,7 @@ borelClosure Ideal := Ideal => opts -> I -> (
 
 
 hatShift = method();
-hatShift = mon -> (
+hatShift RingElement := RingElement => mon -> (
     expVec := (exponents mon)_0;
     n := #expVec;
     hatExpVec := {};
@@ -95,8 +76,42 @@ hatShift = mon -> (
     monHat := vectorToMonomial(vector hatExpVec,ring mon)
     );
 
-borelGens = method();
-borelGens Ideal := List => I -> (
+borelGens = method(Options => {Weights => null});
+borelGens Ideal := List => opts -> J -> (
+    S := ring J;
+    I := copy J;
+    GG := (entries gens I)_0;
+    --GG := copy G;
+    w := opts.Weights;
+    print(GG);
+    if w != null then (
+        print("this happendd");
+        K := coefficientRing S;
+        n := numgens S;
+        R := K[vars(1..n)];
+        psi := psiMap(S,R,w);
+        I := psi(J);
+        G := (entries gens I)_0;
+        );
+    if w!=null then GG=G;
+    print(GG,"here's G");
+    Ghat := {};
+    for g in GG do (
+        Ghat = append(Ghat,hatShift(g));
+        );
+    Ihat := ideal(Ghat);
+    bgensHat := set (entries mingens Ihat)_0;
+    bgens := {};
+    for u in GG do (
+        uHat := hatShift(u);
+        if bgensHat#?uHat then bgens = append(bgens,u);
+        );
+    if ring I != S then bgens = for b in bgens list (preimage_psi(b));
+    bgens);
+
+
+borelGensOld = method();
+borelGensOld Ideal := List => I -> (
     G := (entries gens I)_0;
     Ghat := {};
     for g in G do (
@@ -110,7 +125,6 @@ borelGens Ideal := List => I -> (
         if bgensHat#?uHat then bgens = append(bgens,u);
         );
     bgens);
-
 
 
 
@@ -286,14 +300,28 @@ principalCone Ideal := Cone => I -> (
             if isSubset({v*gs_j},verts) then k = j+1;
             );
         ineqs = append(ineqs,tauMV(m,v,k));
+        ineqs = append(ineqs,-1*tauMV(m,v,k+1));
+        print(m,v,k);
+        print(ineqs);
         );
     -- make sure sinks have degree greater than or equal to m
     for v in sink do (
         ineqs = append(ineqs,sigmaUV(m,v));
         );
-    -- make sure degree of branching points is less than m
-    for u in branchPoints do (
-        ineqs = append(ineqs,sigmaUV(u,m));
-        );
     returnCone := intersection(fundRegion(n),coneFromHData(matrix ineqs));
     returnCone);
+
+principalWeightVector = method();
+principalWeightVector Ideal := List => I -> (
+    c := principalCone I;
+    n := numgens ring I;
+    r := rays c;
+    A := (transpose matrix {apply(n,i->0)}) | r;
+    p := convexHull A;
+    i := 2;
+    while interiorLatticePoints p == {} do (
+        B := A*i;
+        i = i+1;
+        p = convexHull B;
+        );
+    (interiorLatticePoints p)_0);
