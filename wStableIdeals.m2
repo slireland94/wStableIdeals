@@ -18,6 +18,8 @@ export {
     "treeFromMonomial",
     "principalCone",
     "principalWeightVector",
+    "catalanDiagram",
+    "poincareSeries",
     }
 
 
@@ -96,6 +98,69 @@ borelGens Ideal := List => opts -> J -> (
     Bgens := for b in bgens list 
         ((gens (preimage_psi(ideal(b))))_0)_0;
     Bgens);
+
+--------------------------------------------------------
+--------------------------------------------------------
+-- CATALAN DIAGRAMS
+--------------------------------------------------------
+--------------------------------------------------------
+
+catalanDiagram = method(Options => {Weights=>null});
+catalanDiagram RingElement := Matrix => opts -> m -> (
+    S := ring m;
+    K := coefficientRing S;
+    n := numgens S;
+    R := K[vars(1..n)];
+    w := if opts.Weights===null 
+        then apply(n,i->1) else opts.Weights;
+    psi := psiMap(S,R,w);
+    M := psi(m);
+    fM := factoredIndices(M);
+    weirdfM := join(fM,apply(w_0-1,i->n-1));
+    d := #fM;
+    C := mutableMatrix(ZZ,#weirdfM+1,n);
+    C_(0,0) = 1;
+    for i from 1 to numrows(C)-1 do (
+        for j from 0 to weirdfM_(i-1) do (
+            if (0<=i-w_j and i-w_j<d) then (
+                if weirdfM_(i-w_j) >= j then (
+                    rowAbove := for k from 0 to j 
+                        list C_(i-w_j,k);
+                    C_(i,j) = sum(rowAbove);
+                    );
+                );
+            );
+        );
+    --allButFirst := for i from 1 to numRows C - 1 list i;
+    --C = transpose((transpose C)_allButFirst);
+    matrix C);
+
+
+poincareSeries = method(Options => {Weights=>null});
+poincareSeries RingElement := RingElement => opts -> m -> (
+    n := numgens ring m;
+    w := if opts.Weights===null 
+        then apply(n,i->1) else opts.Weights;
+    C := catalanDiagram(m,Weights=>w);
+    runningSum := {};
+    rng := ZZ[vars(19..20)];
+    t := (gens rng)_0;
+    u := (gens rng)_1;
+    n := #w;
+    d := numRows C - w_0;
+    for a from d to d+w_0-1 do (
+        for b from 1 to n do (
+            thing := C_(a,b-1)*u*t^a*product(for k from 1 to b-1 list (1+u*t^(w_(k-1))));
+            runningSum = append(runningSum,thing);
+            );
+        );
+    sum(runningSum));
+
+
+
+
+
+
 
 --------------------------------------------------------
 --------------------------------------------------------
