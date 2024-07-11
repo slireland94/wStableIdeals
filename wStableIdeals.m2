@@ -3,7 +3,9 @@ newPackage(
     Version => "0.1",
     Date => "July 25, 2024",
     Headline => "A Package for Computing with w-Stable Ideals",
-    Authors => {{ Name => "Seth Ireland", Email => "seth.ireland@colostate.edu", HomePage => "sethireland.com"}},
+    Authors => {{   Name => "Seth Ireland",
+                    Email => "seth.ireland@colostate.edu", 
+                    HomePage => "sethireland.com"   }},
     AuxiliaryFiles => false,
     DebuggingMode => true,
     PackageExports => {"Graphs","Polyhedra","SRdeformations"}
@@ -25,7 +27,6 @@ export {
 --------------------------------------------------------
 --------------------------------------------------------
 
-
 psiMap = method();
 psiMap := (S,R,degs) -> (
     L := {};
@@ -37,12 +38,12 @@ psiMap := (S,R,degs) -> (
     psi := map(R,S,L)
     );
 
-
 borelClosure = method(Options => {Weights => null});
 borelClosure Ideal := Ideal => opts -> I -> (
     S := ring I;
     n := numgens S;
-    w := if opts.Weights === null then for i from 1 to n list 1 else opts.Weights;
+    w := if opts.Weights === null 
+        then (for i from 1 to n list 1) else opts.Weights;
     startIdeal := monomialIdeal I;
     K := coefficientRing S;
     R := K[vars (1..n)];
@@ -51,7 +52,6 @@ borelClosure Ideal := Ideal => opts -> I -> (
     psIbar := borel psI;
     Ibar := preimage_psi(psIbar)
     );
-
 
 iswStable = method();
 iswStable (Ideal,List) := Boolean => (I,w) -> (
@@ -77,7 +77,8 @@ borelGens Ideal := List => opts -> J -> (
     K := coefficientRing S;
     n := numgens S;
     R := K[vars(1..n)];
-    w := if opts.Weights===null then apply(n,i->1) else opts.Weights;
+    w := if opts.Weights===null 
+        then apply(n,i->1) else opts.Weights;
     psi := psiMap(S,R,w);
     I := psi(J);
     G := (entries gens I)_0;
@@ -92,13 +93,9 @@ borelGens Ideal := List => opts -> J -> (
         uHat := hatShift(u);
         if bgensHat#?uHat then bgens = append(bgens,u);
         );
-    Bgens := for b in bgens list ((gens (preimage_psi(ideal(b))))_0)_0;
+    Bgens := for b in bgens list 
+        ((gens (preimage_psi(ideal(b))))_0)_0;
     Bgens);
-
-
- 
-
-
 
 --------------------------------------------------------
 --------------------------------------------------------
@@ -106,13 +103,11 @@ borelGens Ideal := List => opts -> J -> (
 --------------------------------------------------------
 --------------------------------------------------------
 
-
 maxIndex = method();
 maxIndex RingElement := ZZ => (m) -> (
     expVec := (exponents m)_0;
-    maxNonzero := position(expVec, i -> i!=0 ,Reverse=>true);
+    maxNonzero := position(expVec,i->i!=0,Reverse=>true);
     maxNonzero);
-
 
 factoredIndices = method();
 factoredIndices RingElement := List => m -> (
@@ -131,7 +126,8 @@ treeFromMonomial RingElement := Graph => opts -> m -> (
     S := ring m;
     K := coefficientRing S;
     n := numgens S;
-    w := if opts.Weights===null then apply(n,i->1) else (opts.Weights);
+    w := if opts.Weights===null 
+        then apply(n,i->1) else (opts.Weights);
     R := K[vars(1..n)];
     psi := psiMap(S,R,w);
     psim := psi(m);
@@ -142,7 +138,8 @@ treeFromMonomial RingElement := Graph => opts -> m -> (
     tree := digraph(trunk);
     tf := true;
     while tf do (
-        leafs := for v in (sinks tree) list ( if #factoredIndices(psi(v)) < d  then v else continue );
+        leafs := for v in (sinks tree) list 
+            (if #factoredIndices(psi(v))<d then v else continue);
         if #leafs == 0 then tf = false;
         newLeafs := {};
         for leaf in leafs do (
@@ -159,9 +156,6 @@ treeFromMonomial RingElement := Graph => opts -> m -> (
         leafs = newLeafs;
         );
     tree);
-
-
-
 
 factoredGens = method();
 factoredGens Ideal := Matrix => I -> (
@@ -195,8 +189,10 @@ treeFromIdeal Ideal := Graph => I -> (
         branches = append(branches,{sub(1,S),gs_(m_0)});
         for i from 0 to k-2 do (
             if m_(i+1) >= 0 then (
-                prev := product(for j from 0 to i list gs_(m_j));
-                branches = append(branches,{prev,prev*gs_(m_(i+1))});
+                someList := for j from 0 to i list gs_(m_j);
+                prev := product(someList);
+                next := prev*gs_(m_(i+1));
+                branches = append(branches,{prev,next});
                 );
             );
         );
@@ -208,7 +204,6 @@ treeFromIdeal Ideal := Graph => I -> (
 -- CONVEX GEOMETRY
 --------------------------------------------------------
 --------------------------------------------------------
-
 
 sortLex = method();
 sortLex List := List => (A) -> (
@@ -244,7 +239,7 @@ sigmaUV (RingElement,RingElement) := List => (u,v) -> (
     ineq := for i from 0 to #a-1 list ( b_i - a_i );
     ineq);
 
--- gets space where branching structure of T_{w,m} agrees (k=max(trunc_{degv+1}(\psi(m))))
+-- gets space where branching structure of T_{w,m} matches at v
 tauMV = method();
 tauMV (RingElement,RingElement,ZZ) := List => (m,v,k) -> (
     a := (exponents m)_0;
@@ -273,14 +268,14 @@ principalCone Ideal := Cone => I -> (
             );
         ineqs = append(ineqs,tauMV(m,v,k));
         ineqs = append(ineqs,-1*tauMV(m,v,k+1));
-        print(m,v,k);
-        print(ineqs);
         );
     -- make sure sinks have degree greater than or equal to m
     for v in sink do (
         ineqs = append(ineqs,sigmaUV(m,v));
         );
-    returnCone := intersection(fundRegion(n),coneFromHData(matrix ineqs));
+    f := fundRegion(n);
+    hdata := matrix ineqs;
+    returnCone := intersection(f,coneFromHData(hdata));
     returnCone);
 
 principalWeightVector = method();

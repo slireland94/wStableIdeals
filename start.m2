@@ -17,5 +17,6 @@ m = x*y^2*z
 w = {5,3,1}
 
 I = borelClosure(ideal(m),Weights=>w)
-B = borelGens(I)
+B = borelGens(I,Weights=>w)
 
+P = principalCone(I)
