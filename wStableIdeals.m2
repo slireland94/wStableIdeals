@@ -11,10 +11,9 @@ newPackage(
 
 export {
     "borelClosure",
+    "iswStable",
     "borelGens",
-    "sortLex",
     "treeFromMonomial",
-    "treeFromIdeal",
     "principalCone",
     "principalWeightVector",
     }
@@ -22,7 +21,7 @@ export {
 
 --------------------------------------------------------
 --------------------------------------------------------
--- CONSTRUCTING W-STABLE IDEALS
+-- CONSTRUCTING W-STABLE IDEALS AND BASIC COMPUTATIONS
 --------------------------------------------------------
 --------------------------------------------------------
 
@@ -54,14 +53,10 @@ borelClosure Ideal := Ideal => opts -> I -> (
     );
 
 
---------------------------------------------------------
---------------------------------------------------------
--- COMPUTING BOREL GENERATORS
---------------------------------------------------------
---------------------------------------------------------
-
-
-
+iswStable = method();
+iswStable (Ideal,List) := Boolean => (I,w) -> (
+    Ibar := borelClosure(I,Weights=>w);
+    I==Ibar);
 
 hatShift = method();
 hatShift RingElement := RingElement => mon -> (
@@ -79,39 +74,12 @@ hatShift RingElement := RingElement => mon -> (
 borelGens = method(Options => {Weights => null});
 borelGens Ideal := List => opts -> J -> (
     S := ring J;
-    I := copy J;
-    GG := (entries gens I)_0;
-    --GG := copy G;
-    w := opts.Weights;
-    print(GG);
-    if w != null then (
-        print("this happendd");
-        K := coefficientRing S;
-        n := numgens S;
-        R := K[vars(1..n)];
-        psi := psiMap(S,R,w);
-        I := psi(J);
-        G := (entries gens I)_0;
-        );
-    if w!=null then GG=G;
-    print(GG,"here's G");
-    Ghat := {};
-    for g in GG do (
-        Ghat = append(Ghat,hatShift(g));
-        );
-    Ihat := ideal(Ghat);
-    bgensHat := set (entries mingens Ihat)_0;
-    bgens := {};
-    for u in GG do (
-        uHat := hatShift(u);
-        if bgensHat#?uHat then bgens = append(bgens,u);
-        );
-    if ring I != S then bgens = for b in bgens list (preimage_psi(b));
-    bgens);
-
-
-borelGensOld = method();
-borelGensOld Ideal := List => I -> (
+    K := coefficientRing S;
+    n := numgens S;
+    R := K[vars(1..n)];
+    w := if opts.Weights===null then apply(n,i->1) else opts.Weights;
+    psi := psiMap(S,R,w);
+    I := psi(J);
     G := (entries gens I)_0;
     Ghat := {};
     for g in G do (
@@ -124,7 +92,11 @@ borelGensOld Ideal := List => I -> (
         uHat := hatShift(u);
         if bgensHat#?uHat then bgens = append(bgens,u);
         );
-    bgens);
+    Bgens := for b in bgens list ((gens (preimage_psi(ideal(b))))_0)_0;
+    Bgens);
+
+
+ 
 
 
 
