@@ -12,15 +12,16 @@ needsPackage("RandomIdeals")
 S = ZZ/101[x,y]
 
 
-m = y^50
+m = y^4
 w = {2,1}
 I = borelClosure(ideal(m),Weights=>w)
 print("ideal computed")
+B = borelGens(I,Weights=>{3,1})
 
 
 --B = borelGens(I,Weights=>w)
-P = principalCone(I)
-print("cone computed")
+--P = principalCone(I)
+--print("cone computed")
 
 --C = catalanDiagram(m,Weights=>w)
 --P = poincareSeries(m,Weights=>w)

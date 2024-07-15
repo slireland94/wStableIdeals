@@ -1,7 +1,7 @@
 newPackage(
     "wStableIdeals",
-    Version => "0.1",
-    Date => "July 25, 2024",
+    Version => "1.1",
+    Date => "July 2024",
     Headline => "A Package for Computing with w-Stable Ideals",
     Authors => {{   Name => "Seth Ireland",
                     Email => "seth.ireland@colostate.edu", 
@@ -13,13 +13,13 @@ newPackage(
 
 export {
     "borelClosure",
-    "iswStable",
     "borelGens",
+    "iswStable",
     "treeFromMonomial",
-    "principalCone",
-    "principalWeightVector",
     "catalanDiagram",
     "poincareSeries",
+    "principalCone",
+    "principalWeightVector",
     }
 
 
@@ -97,6 +97,10 @@ borelGens Ideal := List => opts -> J -> (
         );
     Bgens := for b in bgens list 
         ((gens (preimage_psi(ideal(b))))_0)_0;
+    if not iswStable(J,w) then (
+        print(toString(J) | " is not " | toString(w) | "-stable.");
+        Bgens = null;
+        );
     Bgens);
 
 --------------------------------------------------------
@@ -275,7 +279,6 @@ sortLex List := List => (A) -> (
     A4 := for a in A3 list ( sub(a,S) );
     A4);
 
--- possible weights region (nonincreasing)
 fundRegion = n -> (
     Rays := {};
     for i from 0 to n-1 do (
@@ -353,21 +356,11 @@ principalWeightVector Ideal := List => I -> (
     (interiorLatticePoints p)_0);
 
 
--------------------------------------------
------          DOCUMENTATION          -----
--------------------------------------------
-
-
-///
-    "borelClosure",
-    "iswStable",
-    "borelGens",
-    "treeFromMonomial",
-    "principalCone",
-    "principalWeightVector",
-    "catalanDiagram",
-    "poincareSeries",
-///
+--------------------------------------------------------
+--------------------------------------------------------
+-- DOCUMENTATION
+--------------------------------------------------------
+--------------------------------------------------------
 
 beginDocumentation()
 
@@ -380,7 +373,8 @@ doc ///
     Text
       {\bf Overview:}
       
-      w-stable ideals are a generalization of strongly stable ideals
+      w-stable ideals are a generalization of strongly stable ideals.
+      
       {\bf References:}
       
       [FMS11] C.A. Francisco, J. Mermin, J. Schweig: Borel generators, {\it Journal of Algebra}, 332(1), 522-542, 2011.
@@ -392,11 +386,11 @@ doc ///
 
         {\it Weighted Borel Generators:}
 
-          @TO borelClosure@ -- Test whether a numerical polynomial is a Hilbert polynomial.
+          @TO borelClosure@ -- Compute the Borel closure of a monomial ideal
 
-          @TO borelGens@ -- Compute Gotzmann's decomposition of a Hilbert polynomial.
+          @TO borelGens@ -- Compute the Borel generators of a strongly stable ideal
 
-          @TO iswStable@ -- Compute the Gotzmann number of a Hilbert polynomial.
+          @TO iswStable@ -- Test whether a monomial ideal is w-stable with respect to a given weight vector
 
         {\it Principal w-Stable Ideals:}
 
@@ -415,7 +409,6 @@ doc ///
 doc ///
   Key
     borelClosure
-    (borelClosure, Ideal)
   Headline
     Compute the Borel closure of a monomial ideal
   Usage
@@ -450,6 +443,48 @@ doc ///
      borelClosure(ideal(x*y*z),Weights=>{3,2,1})
 ///
 
+doc ///
+  Key
+    borelGens
+  Headline
+    Compute the Borel generators of a strongly stable ideal
+  Usage
+    borelGens I
+  Inputs
+    I : Ideal
+  Outputs
+    : List
+  Description
+   Text
+      Returns the Borel generators of a strongly stable ideal
+      
+   Example
+     ZZ/101[x,y,z];
+     borelGens ideal(x*y*z,x^2*z,x*y^2,x^2*y,x^3)
+///
+
+doc ///
+  Key
+    Weights
+    [borelGens,Weights]
+  Headline
+    Option to set the weight vector for computing weighted Borel generators
+  Description
+   Text
+    This option can be used to specify the weight vector when computing Borel generators
+    
+    The default is the vector of ones (corresponding to the classic Borel generators)
+
+    Given a weight vector for which the ideal is not w-stable, returns null
+    
+   Example
+     ZZ/101[x,y];
+     borelGens(ideal(y^4,x*y^2,x^2),Weights=>{2,1})
+
+   Example
+     ZZ/101[x,y];
+     borelGens(ideal(y^4,x*y^2,x^2),Weights=>{3,1})
+///
 
 
 end
