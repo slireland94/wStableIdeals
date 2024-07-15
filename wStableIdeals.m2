@@ -131,8 +131,6 @@ catalanDiagram RingElement := Matrix => opts -> m -> (
                 );
             );
         );
-    --allButFirst := for i from 1 to numRows C - 1 list i;
-    --C = transpose((transpose C)_allButFirst);
     matrix C);
 
 
@@ -155,11 +153,6 @@ poincareSeries RingElement := RingElement => opts -> m -> (
             );
         );
     sum(runningSum));
-
-
-
-
-
 
 
 --------------------------------------------------------
@@ -264,6 +257,7 @@ treeFromIdeal Ideal := Graph => I -> (
     tree := digraph(toList set branches);
     tree);
 
+
 --------------------------------------------------------
 --------------------------------------------------------
 -- CONVEX GEOMETRY
@@ -357,3 +351,108 @@ principalWeightVector Ideal := List => I -> (
         p = convexHull B;
         );
     (interiorLatticePoints p)_0);
+
+
+-------------------------------------------
+-----          DOCUMENTATION          -----
+-------------------------------------------
+
+
+///
+    "borelClosure",
+    "iswStable",
+    "borelGens",
+    "treeFromMonomial",
+    "principalCone",
+    "principalWeightVector",
+    "catalanDiagram",
+    "poincareSeries",
+///
+
+beginDocumentation()
+
+doc ///
+  Key
+    wStableIdeals
+  Headline
+    Basic computations with w-stable ideals
+  Description
+    Text
+      {\bf Overview:}
+      
+      w-stable ideals are a generalization of strongly stable ideals
+      {\bf References:}
+      
+      [FMS11] C.A. Francisco, J. Mermin, J. Schweig: Borel generators, {\it Journal of Algebra}, 332(1), 522-542, 2011.
+      @BR{}@ Available at @HREF{"https://arxiv.org/abs/1006.1436"}@.
+      
+
+      
+      {\bf Key user functions:}
+
+        {\it Weighted Borel Generators:}
+
+          @TO borelClosure@ -- Test whether a numerical polynomial is a Hilbert polynomial.
+
+          @TO borelGens@ -- Compute Gotzmann's decomposition of a Hilbert polynomial.
+
+          @TO iswStable@ -- Compute the Gotzmann number of a Hilbert polynomial.
+
+        {\it Principal w-Stable Ideals:}
+
+          @TO treeFromMonomial@ -- Compute the tree associated with a principal w-stable ideal
+          
+          @TO catalanDiagram@ -- Compute the Catalan diagram associated with a principal w-stable ideal
+ 
+          @TO poincareSeries@ -- Compute the Poincare series of a principal w-stable ideal
+
+          @TO principalCone@ -- Compute the principal cone of a strongly stable ideal 
+
+          @TO principalWeightVector@ -- Compute a weight vector for which a strongly stable ideal is principally w-stable  
+///   
+
+
+doc ///
+  Key
+    borelClosure
+    (borelClosure, Ideal)
+  Headline
+    Compute the Borel closure of a monomial ideal
+  Usage
+    borelClosure I
+  Inputs
+    I : Ideal
+  Outputs
+    : Ideal
+  Description
+   Text
+      Returns the Borel closure of the input ideal
+      
+   Example
+     ZZ/101[x,y,z];
+     borelClosure(ideal(x*y*z))
+///
+
+doc ///
+  Key
+    Weights
+    [borelClosure,Weights]
+  Headline
+    Option to set the weight vector for the Borel closure
+  Description
+   Text
+    This option can be used to specify the weight vector when taking a Borel closure
+    
+    The default is the vector of ones (corresponding to the classic Borel closure)
+    
+   Example
+     ZZ/101[x,y,z];
+     borelClosure(ideal(x*y*z),Weights=>{3,2,1})
+///
+
+
+
+end
+restart
+installPackage "wStableIdeals"
+check "wStableIdeals"
