@@ -348,12 +348,17 @@ principalWeightVector Ideal := List => I -> (
     A := (transpose matrix {apply(n,i->0)}) | r;
     p := convexHull A;
     i := 2;
-    while interiorLatticePoints p == {} do (
+    tf := true;
+    returnPt := null;
+    if dim c < n then (tf = false; print(toString I | " is not principally w-stable."));
+    while tf do (
         B := A*i;
         i = i+1;
         p = convexHull B;
+        tf = (interiorLatticePoints p == {});
+        if tf = false then returnPt = (interiorLatticePoints p)_0;
         );
-    (interiorLatticePoints p)_0);
+    returnPt);
 
 
 --------------------------------------------------------
