@@ -2,13 +2,14 @@ newPackage(
     "wStableIdeals",
     Version => "1.1",
     Date => "July 2024",
-    Headline => "A Package for Computing with w-Stable Ideals",
+    Headline => "Computations for w-Stable Ideals",
     Authors => {{   Name => "Seth Ireland",
                     Email => "seth.ireland@colostate.edu", 
                     HomePage => "sethireland.com"   }},
     AuxiliaryFiles => false,
-    DebuggingMode => true,
-    PackageExports => {"Graphs","Polyhedra","SRdeformations"}
+    DebuggingMode => false,
+    PackageExports => {"Graphs","Polyhedra","SRdeformations"},
+    Keywords => {"Combinatorial Commutative Algebra"}
     )
 
 export {
@@ -102,6 +103,7 @@ borelGens Ideal := List => opts -> J -> (
         Bgens = null;
         );
     Bgens);
+
 
 --------------------------------------------------------
 --------------------------------------------------------
@@ -356,7 +358,7 @@ principalWeightVector Ideal := List => I -> (
         i = i+1;
         p = convexHull B;
         tf = (interiorLatticePoints p == {});
-        if tf = false then returnPt = (interiorLatticePoints p)_0;
+        if tf == false then returnPt = (interiorLatticePoints p)_0;
         );
     returnPt);
 
@@ -709,7 +711,20 @@ doc ///
 ///
 
 
--- still need principalCone, principalWeightVector
+--------------------------------------------------------
+--------------------------------------------------------
+-- TESTS AND END
+--------------------------------------------------------
+--------------------------------------------------------
+
+
+TEST ///
+        S = ZZ/101[x,y,z];
+        G = {z^5};
+        w = {4,3,1};
+        I = borelClosure(ideal(G),Weights=>w);
+        assert ( borelGens(I,Weights=>w) == G )
+///
 
 end
 

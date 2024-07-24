@@ -12,18 +12,7 @@ needsPackage("RandomIdeals")
 S = ZZ/101[x,y]
 
 
-m = y^4
-w = {2,1}
-I = borelClosure(ideal(m),Weights=>w)
-print("ideal computed")
-B = borelGens(I,Weights=>{3,1})
-
-
---B = borelGens(I,Weights=>w)
---P = principalCone(I)
---print("cone computed")
-
---C = catalanDiagram(m,Weights=>w)
---P = poincareSeries(m,Weights=>w)
---betti I
-
+G = {y^7,x*y^4,x^2*y^3,x^3*y,x^4}
+w = {3,2}
+I = borelClosure(ideal(G),Weights=>w)
+p = principalWeightVector I
