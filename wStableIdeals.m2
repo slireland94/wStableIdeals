@@ -1,6 +1,6 @@
 newPackage(
     "wStableIdeals",
-    Version => "1.1",
+    Version => "1.0",
     Date => "July 2024",
     Headline => "Computations for w-Stable Ideals",
     Authors => {{   Name => "Seth Ireland",
@@ -20,7 +20,7 @@ export {
     "catalanDiagram",
     "poincareSeries",
     "principalCone",
-    "principalWeightVector",
+    "principalWeightVector"
     }
 
 
@@ -295,6 +295,24 @@ fundRegion = n -> (
         );
     coneFromVData(transpose(matrix Rays)));
 
+
+subsink = method();
+subsink Digraph := List => T -> (
+    sink := set sinks T;
+    verts := set vertices T;
+    checkVerts := verts - sink;
+    checkVerts = toList checkVerts;
+    subsink := {};
+    for u in checkVerts do (
+        kids := toList children(T,u);
+        for kid in kids do (
+            if isSubset({kid},sink) then (
+                subsink = append(subsink,u);
+                );
+            );
+        );
+    toList set subsink);
+
 -- gets space where degree of v is larger or equal to degree of u
 sigmaUV = method();
 sigmaUV (RingElement,RingElement) := List => (u,v) -> (
@@ -336,6 +354,11 @@ principalCone Ideal := Cone => I -> (
     -- make sure sinks have degree greater than or equal to m
     for v in sink do (
         ineqs = append(ineqs,sigmaUV(m,v));
+        );
+    subb := subsink tree;
+    -- make sure subsinks have dgree less than m
+    for u in subb do (
+        ineqs = append(ineqs,sigmaUV(u,m));
         );
     f := fundRegion(n);
     hdata := matrix ineqs;

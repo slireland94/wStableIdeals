@@ -9,10 +9,7 @@ needsPackage("RandomIdeals")
 
 
 
-S = ZZ/101[x,y]
+S = ZZ/101[x,y,z]
 
-
-G = {y^7,x*y^4,x^2*y^3,x^3*y,x^4}
-w = {3,2}
-I = borelClosure(ideal(G),Weights=>w)
-p = principalWeightVector I
+I = ideal(x^3,x^2*y,x*y^3,x*y^2*z)
+p = principalCone I
