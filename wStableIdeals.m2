@@ -363,6 +363,7 @@ principalCone Ideal := Cone => I -> (
     f := fundRegion(n);
     hdata := matrix ineqs;
     returnCone := intersection(f,coneFromHData(hdata));
+    if dim returnCone < n then ( returnCone = coneFromVData transpose matrix {apply(n,i->0)} );
     returnCone);
 
 principalWeightVector = method();
