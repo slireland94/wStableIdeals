@@ -1,7 +1,7 @@
 newPackage(
     "wStableIdeals",
     Version => "1.0",
-    Date => "July 2024",
+    Date => "August 2024",
     Headline => "Computations for w-Stable Ideals",
     Authors => {{   Name => "Seth Ireland",
                     Email => "seth.ireland@colostate.edu", 
@@ -404,9 +404,11 @@ doc ///
     Text
       {\bf Overview:}
       
-      w-stable ideals are a generalization of strongly stable ideals.
+      w-stable ideals are a specialization of strongly stable ideals.
       
       {\bf References:}
+
+      [Ire24] S. Ireland: Weighted Borel Generators, Available at @HREF{"https://arxiv.org/abs/2408.04120"}
       
       [FMS11] C.A. Francisco, J. Mermin, J. Schweig: Borel generators, {\it Journal of Algebra}, 332(1), 522-542, 2011.
       @BR{}@ Available at @HREF{"https://arxiv.org/abs/1006.1436"}@.
