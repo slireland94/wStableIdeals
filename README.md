@@ -1,8 +1,7 @@
-# wStableIdeals
-Macaulay2 Package for w-Stable Ideals
+-- wStableIdeals
+-- Macaulay2 Package for w-Stable Ideals
 
-
-seth: type this command into M2 to get access to your in-progress package: wStableIdeals
- path = append(path, ".Macaulay2/GitHub/wStableIdeals/")
+-- This package was developed alongside the paper "Weighted Borel Generators",
+-- which can be found at https://arxiv.org/abs/2408.04120
 
  

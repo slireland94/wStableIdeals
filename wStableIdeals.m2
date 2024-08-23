@@ -408,8 +408,9 @@ doc ///
       
       {\bf References:}
 
-      [Ire24] S. Ireland: Weighted Borel Generators, Available at @HREF{"https://arxiv.org/abs/2408.04120"}
-      
+      [Ire24] S. Ireland: Weighted Borel Generators, {\it},
+      @BR{}@ Available at @HREF{"https://arxiv.org/abs/2408.04120"}@.
+
       [FMS11] C.A. Francisco, J. Mermin, J. Schweig: Borel generators, {\it Journal of Algebra}, 332(1), 522-542, 2011.
       @BR{}@ Available at @HREF{"https://arxiv.org/abs/1006.1436"}@.
       
@@ -461,7 +462,7 @@ doc ///
 
 doc ///
   Key
-    Weights
+    --Weights
     [borelClosure,Weights]
   Headline
     Option to set the weight vector for the Borel closure
@@ -525,7 +526,7 @@ doc ///
 
 doc ///
   Key
-    Weights
+    --Weights
     [borelGens,Weights]
   Headline
     Option to set the weight vector for computing weighted Borel generators
@@ -573,7 +574,7 @@ doc ///
 
 doc ///
   Key
-    Weights
+    --Weights
     [treeFromMonomial,Weights]
   Headline
     Option to set the weight vector for treeFromMonomial
@@ -619,7 +620,7 @@ doc ///
 
 doc ///
   Key
-    Weights
+    --Weights
     [catalanDiagram,Weights]
   Headline
     Option to set the weight vector for treeFromMonomial
@@ -665,7 +666,7 @@ doc ///
 
 doc ///
   Key
-    Weights
+    --Weights
     [poincareSeries,Weights]
   Headline
     Option to set the weight vector for poincareSeries
